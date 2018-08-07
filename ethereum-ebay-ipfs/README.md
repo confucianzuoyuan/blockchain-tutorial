@@ -184,3 +184,115 @@ contract EcommerceStore {
  }
 }
 ```
+
+## 3.3，向商店添加商品
+
+向链上添加并检索产品
+
+既然我们已经定义了产品的数据结构，让我们将产品添加到区块链并进行检索。我们建议你尝试按照下面的指引实现函数，右侧实现仅作参考之用。
+
+1，新建一个叫做 addProductToStore 的函数，参数为构建 product 结构的所需内容（除了出价相关的变量）。
+
+2，与上一节讨论的 productIndex 类似，计数加 1。
+
+3，使用 require 来验证 auctionStartTime 小于 auctionEndTime。
+
+4，初始化 Product 结构，并用传入函数的参数进行填充。
+
+5，将初始化后的结构存储在 stores mapping。
+
+6，同时在 productionIdInStore mapping 中记录是谁添加了商品。
+
+7，创建一个叫做 getProduct 的函数，它将 productId 作为一个参数，在 stores mapping 中查询商品，返回商品细节，
+
+>每一轮拍卖我们会以秒存储开始和结束时间。
+
+>startPrice 存储的单位为 wei。
+
+如果你留心的话，我们在两个函数中都用了一个叫做 memory 的关键字来存储商品。之所以用这个关键字，是为了告诉 EVM 这个对象仅作为临时变量。一旦函数执行完毕，该变量就会从内存中清除。
+
+```
+function addProductToStore(string _name, string _category, string _imageLink, string _descLink, uint _auctionStartTime,
+  uint _auctionEndTime, uint _startPrice, uint _productCondition) public {
+  require (_auctionStartTime < _auctionEndTime);
+  productIndex += 1;
+  Product memory product = Product(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime,
+                   _startPrice, 0, 0, 0, 0, ProductStatus.Open, ProductCondition(_productCondition));
+  stores[msg.sender][productIndex] = product;
+  productIdInStore[productIndex] = msg.sender;
+}
+
+function getProduct(uint _productId) view public returns (uint, string, string, string, string, uint, uint, uint, ProductStatus, ProductCondition) {
+  Product memory product = stores[productIdInStore[_productId]][_productId];
+  return (product.id, product.name, product.category, product.imageLink, product.descLink, product.auctionStartTime,
+      product.auctionEndTime, product.startPrice, product.status, product.condition);
+}
+```
+
+运行`truffle compile`。
+
+## 3.4，控制台交互
+
+如果你还没有启动 ganache，启动 ganache 并部署合约，看一下你是否能与合约交互。
+
+1，打开 terminal 启动 ganache。
+
+2，像右侧这样编辑 migration 文件，保存并将合约部署到区块链。
+
+3，启动 truffle 控制台并向区块链添加一个商品。你可以给图片和描述链接随机输入一些内容（在实现 IPFS 的相关功能呢后，我们会来改进这一点）。
+
+4，通过 product id 检索你插入的商品（由于这是你添加的第一个商品，所以 product id 将会是 1）。
+
+代码：
+
+`terminal 1`
+
+```
+$ npm install -g ganache-cli
+$ ganache-cli
+```
+
+`terminal 2`
+
+将`migrations/2_deploy_contracts.js`修改为：
+
+```
+var EcommerceStore = artifacts.require("./EcommerceStore.sol");
+
+module.exports = function(deployer) {
+ deployer.deploy(EcommerceStore);
+};
+```
+
+然后运行
+
+```
+$ truffle migrate
+$ truffle console
+```
+
+如果运行`truffle migrate`报错，那么需要修改`truffle.js`中的地址为本地跑起来的`ganache-cli`的地址。
+
+例如：
+
+```js
+module.exports = {
+  networks: {
+    development: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "*" // Match any network id
+    }
+  }
+};
+```
+
+运行`truffle console`以后，进入控制台，运行以下命令。
+
+```
+truffle(development)>  amt_1 = web3.toWei(1, 'ether');
+'1000000000000000000'
+truffle(development)>  current_time = Math.round(new Date() / 1000);
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 6', 'Cell Phones & Accessories', 'imagelink', 'desclink', current_time, current_time + 200, amt_1, 0).then(function(f) {console.log(f)})});
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.getProduct.call(1).then(function(f) {console.log(f)})})
+```
