@@ -148,3 +148,39 @@ $ rm contracts/ConvertLib.sol contracts/MetaCoin.sol
 用 truffle compile 编译合约，在继续之前请确保没有任何问题。
 
 >debug 合约里的问题可能非常麻烦。我们推荐每一节完成后都编译一下，以便于早发现，早治疗。
+
+`EcommerceStore.sol`
+
+```js
+pragma solidity ^0.4.13;
+
+contract EcommerceStore {
+ enum ProductStatus { Open, Sold, Unsold }
+ enum ProductCondition { New, Used }
+
+ uint public productIndex;
+ mapping (address => mapping(uint => Product)) stores;
+ mapping (uint => address) productIdInStore;
+
+ struct Product {
+  uint id;
+  string name;
+  string category;
+  string imageLink;
+  string descLink;
+  uint auctionStartTime;
+  uint auctionEndTime;
+  uint startPrice;
+  address highestBidder;
+  uint highestBid;
+  uint secondHighestBid;
+  uint totalBids;
+  ProductStatus status;
+  ProductCondition condition;
+ }
+
+ function EcommerceStore() public {
+  productIndex = 0;
+ }
+}
+```
