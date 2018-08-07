@@ -151,7 +151,7 @@ $ rm contracts/ConvertLib.sol contracts/MetaCoin.sol
 
 `EcommerceStore.sol`
 
-```js
+```
 pragma solidity ^0.4.13;
 
 contract EcommerceStore {
