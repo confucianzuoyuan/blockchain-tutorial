@@ -314,3 +314,207 @@ truffle(development)>  EcommerceStore.deployed().then(function(i) {i.getProduct.
 4，现在 Alice 打算出价 17 美元。因为 Alice 的出价高于 Mary，eBay 将出价调整到 15.25 美元（比 Mary 的出价高 0.25 美元）。Mary 输掉了竞价（如果她想的话可以再次出一个更高的价）
 
 5，没有人再出价了，所以 Alice 赢得了拍卖。即使 Alice 出价 17 美元，但是她只需要支付 15.25 美元。
+
+## 3.6，暗标拍卖
+
+我们刚刚学的拍卖类型叫做 Vickery Auction。
+
+任何人都可以监控交易来观察是否有其他人为一个商品出价。回到上一节的例子，当 Mary 出价 15 美元时，除了 Mary 和 eBay 没有人知道她到底出价多少。但是在以太坊上，每个人都会知道她出价多少，这实际上就会变成一个公开拍卖。为了解决这个问题，我们会使用一个稍微不同于 Vickery auction 的形式，出价者提交一个经过加密的竞价，这样就不会有人知道出价到底是多少。在拍卖结束的时候，所有参与竞价的人都出示自己的出价，大家就可以看到每个人都出价多少。合约会验证密封出价与公开出价是否一致，然后决定最终的赢家。赢家支付金额为第二高的出价。这与 ENS 的拍卖非常类似。
+
+另一个非常不一样的地方是，在 eBay 中，当你出价时，你提交的是赢得竞价的金额，但是实际支付金额并不是所提交的出价。我们的情况则不同，当用户出价的时候必须同时发送 ETH。在以太坊中，所谓出价者就是账户地址而已，如果你通过支付来出价，就无法保证最高出价者会实际赢得拍卖。当竞价结束，所有输掉竞价的人将会收回各自出价的 ETH。
+
+还是上一节的例子，让我们来看一下它在区块链上到底是如何工作的。
+
+>Alice 为商品出价 10.50 美元
+
+在我们的系统中，如果 Alice 想要出价 10.50 美元，她将会对出价进行隐藏 sha3($10.50, "secretstring")，产生一个哈希 比如说 3fc3ac1afb93b6c29dc1a7d03cbff392ab89638475ed0fe7a3923facfe1dab67（我们会在下一节复习哈希的有关细节）。然后她将这个字符串发送出去，同时发送价值 15 美元的 ETH。看到这笔交易的任何人就都知道了她发送了 15 美元，但是没有人知道她只出价 10.50 美元。
+
+>Mary 现在看到出价是 10.50 美元，但是她送出了 15 美元。
+
+在这种情况下，Mary 并不知道 Alice 出价 10.50 美元。她知道 Alice 送出了 15 美元。如果 Mary 想要出价 15 美元，她可以对 sha3($15, "marysecretstring") 进行哈希，并发送哈希后的字符串，同时还有 15 美元或者更多的 ETH。
+
+类似地，每个人都可以对想要购买的商品进行出价。
+
+注意，用户可能会发送一个小于实际出价的数额来迷惑其他人。比如：Alice 出价 sha3($30, "secretstring")，但是实际只给合约转了 20 美元。在这种情况下，当她揭示出价时，合约会将这些钱归还回去，因为这是一个无效的出价。
+
+>John 现在看到目前的出价是 10.75 美元，而他出价 12 美元
+
+在这种情况下，John 仅出价 12 美元，因为这就是它愿意支付的金额。
+
+>现在 Alice 决定出价 17 美元
+
+尽管 Alice 已经出价了一次，她仍然可以再次出价。失败的任何报价，Alice 都会取回自己的钱。
+
+## 3.7，揭示报价
+
+一旦拍卖结束，所有的出价者都必须揭示各自报价。为了揭示报价，出价者必须向合约发送他们出价的金额和 secret string（他们用 secret string 对出价进行了哈希）。合约通过将报价金额与 secret string 进行组合构造出哈希后的报价，然后与出价者之前所发送的哈希后的字符串进行匹配。如果匹配成功，则出价有效。否则出价无效，合约会返还相应的资金。
+
+还是回到之前的例子，来看一下揭示报价是如何工作的。
+
+### Alice 揭示报价
+
+Alice 通过向合约发送 10.50 美元和 “secretstring” 来揭示她的报价。合约使用同一个算法来生成哈希。在这个例子中，所生成的哈希会与 Alice 所发送的3fc3ac1afb93b6c29dc1a7d03cbff392ab89638475ed0fe7a3923facfe1dab67 一样。由于这是一个有效出价并且 Alice 发送了 15 美元，合约会记录它为有效出价，并将 15 - 10.5 = 4.5 美元返还给 Alice。
+
+### Mary 揭示报价
+
+类似地，Mary 也要揭示她的出价。因为她出价 15 美元，她就是最高的出价者。合约会替换掉 Alice，Mary 成为最高的出价者，Alice 成为第二高的出价者。因为 Alice 没有赢得竞价，所以她会拿回自己所有的钱。
+
+### John 揭示报价
+
+John 仅出价 12 美元。当揭示报价时，因为 John 输掉了竞价所以他会立刻收到返还的资金。
+
+在本例中， Mary 赢得竞价，并支付 10.50 美元（第二高的报价）。
+
+## 3.8，合约代码
+
+现在我们已经知道出价和揭示出价是如何工作了。下面让我们来实现这些功能。
+
+我们需要有一种途径来存储用户的出价。让我们来创建一个 struct 保存出价信息。注意 struct 里面的 value 字段是出价者实际发送 ETH 的数量，而不是当前实际出价的数量。当前出价的数量被加密了。只有发送的数量是已知的，它会被用于填充 value 字段。
+
+为了方便地查询用户给哪个商品出价，出价多少。让我们给 product struct 加入一个 mapping mapping (address => mapping (bytes32 => Bid)) bids;。键为出价者的地址，值为哈希后的出价字符串到 bid struct 的 mapping。
+
+`Bid Struct`
+
+```
+struct Bid {
+  address bidder;
+  uint productId;
+  uint value;
+  bool revealed;
+}
+```
+
+`Product Struct`
+
+```
+struct Product {
+  ....
+  ....
+  mapping (address => mapping (bytes32 => Bid)) bids;
+}
+```
+
+### 出价
+
+bid 函数有两个参数，product id 和加密后的 bid 字符串。bid 函数本身非常直观。我们从 stores mapping 检索产品，构建 bid struct 并把它加入到 mapping（我们上面刚刚初始化了）。我们有一些验证（require 语句）也很直观。你会注意到代码里的关键词 now。它仅仅是当前块的时间戳，也就是，当 bid 函数被调用时，表明一笔交易被创建。这笔交易被矿工打包到块里。每个块都有一个对应的时间戳（用来告诉你这个块被挖出来的时间）。now 就等同于那个时间戳。
+
+在上两节，我们谈到了对 bid 进行哈希。sha3 是一个密码学上的哈希函数，对于任何长度的任意字符串，它都可以生成一个固定长度的唯一字符串。所生成的字符串对于给定的任意字符串都是独一无二的，也就是说，没有两个任意字符串能够通过 sha3 哈希算法生成一样固定长度的哈希。
+
+让我们来看一下为什么这对我们的场景十分有用（生成密封的出价）。为了生成一个密封出价，我们使用了 ethereumjs-util library's sha3 function。如果 Alice 想要生成一个出价，她只需要调用 sha3 函数，传入她打算出价的数量和 secret。
+
+```js
+sha3("10.5" + "secretstring").toString('hex') => c2f8990ee5acd17d421d22647f20834cc37e20d0ef11087e85774bccaf782737
+```
+
+这是传入 bid() 函数的 bytes32 字符串。任何看到该字符串的人都不知道 Alice 的出价是 10.5。
+
+`Bid function`
+
+```js
+function bid(uint _productId, bytes32 _bid) payable public returns (bool) {
+  Product storage product = stores[productIdInStore[_productId]][_productId];
+  require (now >= product.auctionStartTime);
+  require (now <= product.auctionEndTime);
+  require (msg.value > product.startPrice);
+  require (product.bids[msg.sender][_bid].bidder == 0);
+  product.bids[msg.sender][_bid] = Bid(msg.sender, _productId, msg.value, false);
+  product.totalBids += 1;
+  return true;
+}
+```
+
+### 揭示出价
+
+revealing 函数稍显复杂。为了更好地理解代码，让我们首先来捋一下逻辑。揭示出价就是要告诉合约你出价了多少。方式就是将的 secret string 和你打算出价的数量发送给合约。合约将同样的 sha3 算法应用于出价数量和 secret，并检查所生成的哈希是否在 bids mapping 里面。当执行检查的时候，可能会出现以下场景：
+
+1，没有找到相关的哈希。这意味着用户尝试揭示不曾出价过的数量。在这种情况下，仅抛出一个异常（revealBid 函数的第 6 行）
+
+2，出价数量小于发送数量：比如用户出价 10 美元，但是只发送了 5 美元。因为这是无效的，所以我们只需要将这 5 美元返回给用户即可。
+
+3，出价数量大于等于发送数量：这是一个有效出价。现在我们会检查是否应该记录此次出价。
+
+4，首次揭示：如果这是第一个有效的出价揭示，我们会把它记录为最高出价，同时记录是谁出的价。我们也会将第二高的出价设置为商品的起始价格（如果没有其他揭示报价，就由这个用户支付起始价格。还记得赢家总是支付第二高的价格吗？）。（Lines 15 - 19）
+
+5，更高的出价：如果用户揭示了出价，并且他们的出价高于现有所揭示的最高出价，我们将会记录该出价者，将其出价记录为最高出价，并设置第二高的出价为旧的出价数量。（Lines 21 - 25）
+
+6，更低的出价：如果出价比最高出价要低，这是一个会失败的出价。但是我们也会检查它是否低于第二高的出价。如果是的话，只需要返还资金即可，因为他们已经输掉了竞价，否则将该出价设置为第二高的出价。
+
+在所有情况中，我们会返还发送数量与实际出价的差额，也就是，如果 Alice 出价 10 美元，但是发送了 15 美元，在揭示出价以后，将会返回给 Alice 5 美元。
+
+### getter 函数
+
+让我们也实现两个简单的 getter 函数，分别返回最高出价者信息和一个商品的总出价。这些信息将会用于在网页显示出价信息，同时为了有助于在 truffle 控制台进行测试。
+
+`Reveal function`
+
+```js
+function revealBid(uint _productId, string _amount, string _secret) public {
+ Product storage product = stores[productIdInStore[_productId]][_productId];
+ require (now > product.auctionEndTime);
+ bytes32 sealedBid = sha3(_amount, _secret);
+
+ Bid memory bidInfo = product.bids[msg.sender][sealedBid];
+ require (bidInfo.bidder > 0);
+ require (bidInfo.revealed == false);
+
+ uint refund;
+
+ uint amount = stringToUint(_amount);
+
+ if(bidInfo.value < amount) {
+  // They didn't send enough amount, they lost
+  refund = bidInfo.value;
+ } else {
+  // If first to reveal set as highest bidder
+  if (address(product.highestBidder) == 0) {
+   product.highestBidder = msg.sender;
+   product.highestBid = amount;
+   product.secondHighestBid = product.startPrice;
+   refund = bidInfo.value - amount;
+  } else {
+   if (amount > product.highestBid) {
+    product.secondHighestBid = product.highestBid;
+    product.highestBidder.transfer(product.highestBid);
+    product.highestBidder = msg.sender;
+    product.highestBid = amount;
+    refund = bidInfo.value - amount;
+   } else if (amount > product.secondHighestBid) {
+    product.secondHighestBid = amount;
+    refund = amount;
+   } else {
+    refund = amount;
+   }
+  }
+ }
+ product.bids[msg.sender][sealedBid].revealed = true;
+
+ if (refund > 0) {
+  msg.sender.transfer(refund);
+ }
+}
+```
+
+`Getter & Helper functions`
+
+```js
+function highestBidderInfo(uint _productId) view public returns (address, uint, uint) {
+  Product memory product = stores[productIdInStore[_productId]][_productId];
+  return (product.highestBidder, product.highestBid, product.secondHighestBid);
+}
+
+function totalBids(uint _productId) view public returns (uint) {
+  Product memory product = stores[productIdInStore[_productId]][_productId];
+  return product.totalBids;
+}
+
+function stringToUint(string s) pure private returns (uint) {
+  bytes memory b = bytes(s);
+  uint result = 0;
+  for (uint i = 0; i < b.length; i++) {
+    if (b[i] >= 48 && b[i] <= 57) {
+      result = result * 10 + (uint(b[i]) - 48);
+    }
+  }
+  return result;
+}
+```
