@@ -518,3 +518,10 @@ function stringToUint(string s) pure private returns (uint) {
   return result;
 }
 ```
+
+然后，
+
+```sh
+$ truffle compile
+$ truffle migrate
+```
