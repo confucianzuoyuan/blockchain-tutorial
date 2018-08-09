@@ -525,3 +525,60 @@ function stringToUint(string s) pure private returns (uint) {
 $ truffle compile
 $ truffle migrate
 ```
+
+## 3.9，控制台交互
+
+我们会用 ethereumjs-util 库来生成出价的哈希。首先来安装这个库。将库添加到 package.json 并安装。
+
+你已经在 ganache 部署了合约的第一个版本。你可以重启 ganache 并运行 truffle migrate，或者传入 --reset 选项来重新部署合约。
+
+1, 让我们首先向区块链插入一个商品（拍卖结束时间从现在算起 200 秒）
+
+2, 我们已经有了 10 个测试账户，所以让我们从不同账户出价几次。
+
+当你对商品出价以后，使用 web3.eth.getBalance 检查 accounts[0] 和 accounts[1] 的余额。你会注意到它们的余额大概是 97 ETH 和 96 ETH。他们打算出价 2 ETH 和 3 ETH，但是分别发送了 3 ETH 和 4 ETH。如果代码如期工作，当我们揭示出价时，差价应该返还给这些账户。
+
+1, 我们会等待直到拍卖结束（在本例中我们已经设置结束时间为现在起 200 秒），然后揭示所有出价。
+
+2, 我们将会使用 getter 方法来查看是谁赢得了拍卖。
+
+当执行 highestBidderInfo 函数，你应该看到 accounts[2] 为最高出价 3 ETH 的出价者（赢家），第二高的出价是 2 ETH。
+
+此时，所有失败的出价者将会收到返回的出价资金。赢家的出价数量仍然在合约里。在托管服务一节，我们将会添加将 ETH 从合约转移到单独的托管合约的功能。
+
+```js
+"devDependencies": {
+  ....
+  ....
+  "ethereumjs-util": "5.1.2"
+}
+```
+
+```sh
+$ npm install
+$ truffle migrate --reset
+$ truffle console
+```
+
+```js
+truffle(development)>  amt_1 = web3.toWei(1, 'ether');
+'1000000000000000000'
+truffle(development)>  current_time = Math.round(new Date() / 1000);
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 6', 'Cell Phones & Accessories', 'imagelink', 'desclink', current_time, current_time + 200, amt_1, 0).then(function(f) {console.log(f)})});
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.getProduct.call(1).then(function(f) {console.log(f)})})
+truffle(development)>  Eutil = require('ethereumjs-util');
+truffle(development)>  sealedBid = '0x' + Eutil.sha3((2 * amt_1) + 'mysecretacc1').toString('hex');
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.bid(1, sealedBid, {value: 3*amt_1, from: web3.eth.accounts[1]}).then(function(f) {console.log(f)})});
+truffle(development)>  sealedBid = '0x' + Eutil.sha3((3 * amt_1) + 'mysecretacc2').toString('hex');
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.bid(1, sealedBid, {value: 4*amt_1, from: web3.eth.accounts[2]}).then(function(f) {console.log(f)})});
+
+truffle(development)>  web3.eth.getBalance(web3.eth.accounts[1])
+truffle(development)>  web3.eth.getBalance(web3.eth.accounts[2])
+
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.revealBid(1, (2*amt_1).toString(), 'mysecretacc1', {from: web3.eth.accounts[1]}).then(function(f) {console.log(f)})})
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.revealBid(1, (3*amt_1).toString(), 'mysecretacc2', {from: web3.eth.accounts[2]}).then(function(f) {console.log(f)})})
+
+truffle(development)>  EcommerceStore.deployed().then(function(i) {i.highestBidderInfo.call(1).then(function(f) {console.log(f)})})
+```
+
+别忘了把`test`文件夹下的删空。
