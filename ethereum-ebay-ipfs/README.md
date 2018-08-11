@@ -1673,3 +1673,399 @@ Add the following elements to display the escrow information
  <a id="refund-funds" class="btn form-submit">Refund Amount to Buyer</a>
 </div>
 ```
+
+# 8, 链下产品
+
+## 8.1，概述
+
+在合约实现中，我们将所有产品存储在区块链上。我们没有途径能够通过类型过滤产品。不同的过滤器可能是，显示所有属于“phone”目录的产品，按价格排序显示产品或者按照拍卖结束时间显示产品。你可能会问，我们为什么不能在合约里面实现这些过滤呢。我们肯定可以，但是它有一些缺点：
+
+- 1, 如果我们加入这些特性，代码肯定会更复杂。我们必须引入更多的数组，mapping 和其他数据存储。这意味着我们必须支付更多的 gas 来部署代码。
+- 2, 代码更复杂，也意味着越容易出现 bug。由于合约一旦部署就无法更改，将没有途径能够修复这些 bug。 
+- 3, 我们也没有办法对合约里面的过滤逻辑进行更新，因为合约一旦部署，就无法更新。
+
+为了解决这个问题，我们将在链下用数据库备份商品，用它来查询商品。因为主备份仍然是在链上，任何人都可以验证产品并没有被数据库所篡改。即使数据库挂掉了，产品依然在链上，依然可以从链上获取产品。
+
+当添加一个产品到区块链上，我们将会触发一个事件（在 8.5 节你将会学习事件的更多内容）。我们的后端服务器会监听这些事件，会包含所有细节并将其插入数据库。当我们构建前端时，我们会查询数据库而不是区块蓝显示所有产品，并对其过滤。
+
+## 8.2，安装MongoDB
+
+`package.json`
+
+```js
+"devDependencies": {
+  ...
+  ...
+  "ethereumjs-util": "5.1.2",
+  "mongoose": "4.11.7"
+}
+```
+
+```sh
+$ npm install
+```
+
+## 8.3，产品定义
+
+当使用 Mongoose 时，我们必须定义一个打算在 MongoDB 数据库中存储的实体的 schema。在我们的案例中，我们是在数据库中存储和查询产品。让我们给产品添加一个 schema，内容就是我们在 contract struct 里面的信息。如右侧所示，在你的项目目录下创建一个叫做 product.js 的文件。
+
+`product.js`
+
+```js
+var mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+
+var Schema = mongoose.Schema;
+
+var ProductSchema = new Schema({
+ blockchainId: Number,
+ name: String,
+ category: String,
+ ipfsImageHash: String,
+ ipfsDescHash: String,
+ auctionStartTime: Number,
+ auctionEndTime: Number,
+ price: Number,
+ condition: Number,
+ productStatus: Number
+});
+
+var ProductModel = mongoose.model('ProductModel', ProductSchema);
+
+module.exports = ProductModel;
+```
+
+## 8.4, 安装 NodeJS 应用
+
+我们会使用 Expressjs，一个简单，简约的 web 框架来处理 web 请求。通过使用 Express，只需要几行 JavaScript 代码就可以暴露 API endpoint。开发 NodeJS 应用时其中一个恼人的问题就是，代码变动时，你需要重启应用才能看到代码变化。为了避免每次改动后必须重启才能看到变化，我们会使用一个叫做 nodemon 的库。nodemon 会监控文件内容，当文件发生改动时就会重启服务器。将 expressjs 和 nodemon 加入 package.json 并安装。
+
+### ExpressJS/Nodemon 安装
+
+让我们创建一个简单的服务器，并检查 Expressjs 和 Nodemon 是否正常工作。
+
+在项目目录创建一个叫做 server.js 的文件，并将右侧内容拷贝到里面。代码初始化并创建了一个 ExpressJS 应用，它会在 3000 端口开始监听请求。实现一个返回字符串的简单的 GET 请求。通过 nodemon 启动服务器并访问 localhost:3000，你应该能够看到页面上有个 “Hello, World!”。如果看到了你新的字符串，就说明 nodemon 正常工作！
+
+`package.json`
+
+```js
+"devDependencies": {
+  ...
+  ...
+  "express": "4.15.4",
+  "nodemon": "^1.11.0"
+}
+```
+
+```sh
+$ npm install
+```
+
+`server.js`
+
+```js
+var express = require('express');
+var app = express();
+
+app.listen(3000, function() {
+ console.log('Ebay Ethereum server listening on port 3000!');
+});
+
+app.get('/', function(req, res) {
+ res.send("Hello, World!");
+});
+```
+
+`start nodemon`
+
+```sh
+$ node_modules/.bin/nodemon server.js
+```
+
+## 8.5, Solidity 事件
+
+在 8.1 节，我们简单地提到了会用到合约所触发的事件来存储产品。在以太坊里事件是什么，我们如何利用呢？
+
+事件可以认为是，当合约的状态改变时，由合约触发的通知或日志记录。所有的编程语言都有日志功能。将日志加入到代码是为了在运行时理解代码状态和数据。大多情况下，你的日志数据会被写入到一个文件或是某个数据库。比如，在 JavaScript 中，如果代码里有 console.log(product.name)，当该代码运行时，控制台就是通过日志记录 product name。
+
+在 Solidity 中，你可以用时间做同样的事情。但是，Solidity 事件的其中一个特性是，事件被永久存储在交易日志中，这是区块链里面一个特殊的数据结构。它们可以在任何时候通过合约外部进行查询，也就是说，如果你想的话，合约一年之前触发的事件你都可以查得到！关于 solidity 事件的更多内容可以查看 这里。
+
+右侧可以看到如何创建和利用事件的。
+
+`Declare Event`
+
+Before using an event, you first declare the Event signature in your contract like this:
+
+```js
+ event NewProduct(uint _productId, string _name, string _category, string _imageLink, string _descLink,
+  uint _auctionStartTime, uint _auctionEndTime, uint _startPrice, uint _productCondition);
+```
+
+`Trigger Event`
+
+In your code, when you want to fire an event, you trigger it like below:
+
+```js
+  NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
+```
+
+`Watch Event`
+
+You can then watch for Events and take action (in our case read the contents and insert in to the database)
+
+```js
+ EcommerceStore.deployed().then(function(i) {
+  productEvent = i.NewProduct({fromBlock: 0, toBlock: 'latest'});
+  //change fromBlock to something recent on Ropsten
+  productEvent.watch(function(err, result) {
+   if (err) {
+    console.log(err)
+    return;
+   }
+   saveProduct(result.args);
+  });
+```
+
+## 8.6, 存储商品
+
+有了刚才的铺垫，让我们更新一个合约，当一个产品被添加到区块链时，触发一个事件，将代码加入到服务端监听这些事件，并将产品插入到数据库中。
+
+### server.js
+
+Line 1 - 6: 这段代码应该非常熟悉，只是初始化合约相关的变量。
+
+Line 7- 13: 正如已经讨论的，我们使用 mongoose 驱动与 MongoDB 与数据库交互。我们设置 mongoose 连接到数据库。
+
+Line 14 - 24: 创建一个简单的服务器并监听请求的 ExpressJS 代码。
+
+Line 25 - 37: 监听 NewProduct 事件的函数，并调用函数来保存产品。
+
+Line 38: 调用监听函数
+
+Line 39 - 58: 将产品保存到 MongoDB 数据库的函数
+
+### 测试
+重启 ganache，并/或根据更新重新部署合约。然后，通过 truffle 控制台，UI 或是 seed.js 脚本添加一两个产品到区块链。这应该会触发事件，server.js 代码应该会观测到并将其插入到数据库。
+
+```sh
+$ mongo
+```
+
+MongoDB console
+
+```
+> show dbs;
+> use ebay_dapp;
+> db.productmodels.find({})
+```
+
+`Add Event logic to the contract`
+
+```js
+.....
+.....
+function EcommerceStore() {
+  productIndex = 0;
+}
+event NewProduct(uint _productId, string _name, string _category, string _imageLink, string _descLink, uint _auctionStartTime, uint _auctionEndTime, uint _startPrice, uint _productCondition);
+.....
+.....
+function addProductToStore(string _name, string _category, string _imageLink, string _descLink, uint _auctionStartTime, uint _auctionEndTime, uint _startPrice, uint _productCondition) {
+.....
+.....
+  NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
+}
+```
+
+`server.js`
+
+```js
+var ecommerce_store_artifacts = require('./build/contracts/EcommerceStore.json')
+var contract = require('truffle-contract')
+var Web3 = require('web3')
+var provider = new Web3.providers.HttpProvider("http://localhost:8545");
+var EcommerceStore = contract(ecommerce_store_artifacts);
+EcommerceStore.setProvider(provider);
+
+//Mongoose setup to interact with the mongodb database 
+var mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+var ProductModel = require('./product');
+mongoose.connect("mongodb://localhost:27017/ebay_dapp");
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+// Express server which the frontend with interact with
+var express = require('express');
+var app = express();
+
+app.use(function(req, res, next) {
+ res.header("Access-Control-Allow-Origin", "*");
+ res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+ next();
+});
+
+app.listen(3000, function() {
+ console.log('Ebay Ethereum server listening on port 3000!');
+});
+
+function setupProductEventListner() {
+ let productEvent;
+ EcommerceStore.deployed().then(function(i) {
+  productEvent = i.NewProduct({fromBlock: 0, toBlock: 'latest'});
+
+  productEvent.watch(function(err, result) {
+   if (err) {
+    console.log(err)
+    return;
+   }
+   saveProduct(result.args);
+  });
+ })
+}
+
+setupProductEventListner();
+
+function saveProduct(product) {
+ ProductModel.findOne({ 'blockchainId': product._productId.toLocaleString() }, function (err, dbProduct) {
+
+  if (dbProduct != null) {
+   return;
+  }
+
+  var p = new ProductModel({name: product._name, blockchainId: product._productId, category: product._category,
+   ipfsImageHash: product._imageLink, ipfsDescHash: product._descLink, auctionStartTime: product._auctionStartTime,
+   auctionEndTime: product._auctionEndTime, price: product._startPrice, condition: product._productCondition,
+   productStatus: 0});
+  p.save(function (err) {
+   if (err) {
+    handleError(err);
+   } else {
+    ProductModel.count({}, function(err, count) {
+     console.log("count is " + count);
+    })
+   }
+  });
+ })
+}
+```
+
+## 8.7, 浏览商品
+
+如果你能够成功地插入到数据库，让我们来更新 app.js，使其通过查询数据库而不是区块链来渲染 index.html 中的商品。
+
+练习
+
+更多商品细节页面的代码，使其通过查询 MongoDB 而不是区块链来获取一个产品的 ID ，并渲染页面。
+
+`app.js`
+
+```js
+const offchainServer = "http://localhost:3000";
+const categories = ["Art","Books","Cameras","Cell Phones & Accessories","Clothing","Computers & Tablets","Gift Cards & Coupons","Musical Instruments & Gear","Pet Supplies","Pottery & Glass","Sporting Goods","Tickets","Toys & Hobbies","Video Games"];
+
+
+function renderProducts(div, filters) {
+ $.ajax({
+  url: offchainServer + "/products",
+  type: 'get',
+  contentType: "application/json; charset=utf-8",
+  data: filters
+ }).done(function(data) {
+  if (data.length == 0) {
+   $("#" + div).html('No products found');
+  } else {
+   $("#" + div).html('');
+  }
+  while(data.length > 0) {
+   let chunks = data.splice(0, 4);
+   let row = $("<div/>");
+   row.addClass("row");
+   chunks.forEach(function(value) {
+    let node = buildProduct(value);
+    row.append(node);
+   })
+   $("#" + div).append(row);
+  }
+ })
+}
+
+function renderStore() {
+ renderProducts("product-list", {});
+ renderProducts("product-reveal-list", {productStatus: "reveal"});
+ renderProducts("product-finalize-list", {productStatus: "finalize"});
+ categories.forEach(function(value) {
+  $("#categories").append("<div>" + value + "");
+ })
+}
+```
+
+`server.js`
+
+```js
+app.get('/products', function(req, res) {
+ current_time = Math.round(new Date() / 1000);
+ query = { productStatus: {$eq: 0} }
+
+ if (Object.keys(req.query).length === 0) {
+  query['auctionEndTime'] = {$gt: current_time}
+ } else if (req.query.category !== undefined) {
+  query['auctionEndTime'] = {$gt: current_time}
+  query['category'] = {$eq: req.query.category}
+ } else if (req.query.productStatus !== undefined) {
+  if (req.query.productStatus == "reveal") {
+   query['auctionEndTime'] = {$lt: current_time, $gt: current_time - (60*60)}
+  } else if (req.query.productStatus == "finalize") {
+   query['auctionEndTime'] = { $lt: current_time - (60*60) }
+   query['productStatus'] = {$eq: 0}
+  }
+ }
+
+ ProductModel.find(query, null, {sort: 'auctionEndTime'}, function (err, items) {
+  console.log(items.length);
+  res.send(items);
+ })
+});
+```
+
+# 9, 总结
+
+## 9.1，部署
+
+到目前为止，我们已经在 ganache 上实现并测试了 dapp。此刻，如果已经实现想要的所有功能，你可以将 dapp 部署到一个测试网（Ropsten, Rinkeby 或者 Kovan）。按照下列步骤部署并设置你的 dapp。
+
+- 1，启动你的以太坊客户端（geth，parity 等等）并保证完全同步。
+- 2，移除 build/ 目录 ganache 的相关内容，再次运行 truffle migrate。
+
+如果你想要将应用托管在一个 web 服务器以便于全世界的人都可以接入，按照以下步骤。下面假设你的用户会使用 metamask 与你的 dapp 进行交互：
+
+- 1，不必运行你自己的 IPFS 节点，你可以使用像 Infura 这样的免费托管服务。在你的 app.js 中，将 IPFS 的配置从 localhost 替换为 Infura。 
+```js
+const ipfs = ipfsAPI({host: 'ipfs.infura.io', port: '5001', protocol: 'http'})
+```
+- 2，可能会有一些没有 metamask 的用户访问你的网站。这时不要什么都不显示，至少将产品显示出来。为此，我们再次使用 infura 托管的以太坊节点，而不是使用我们自己的节点。为此，在 Infura 上免费注册。注册好后，你应该会有一个 API key。用这个 API key 更新 app.js 里面的 web3 provider，将其从 localhost 更新为 Infura 的服务器，就像下面这样
+```js
+window.web3 = new Web3(new Web3.providers.HttpProvider("https://ropsten.infura.io/API_KEY"));
+```
+- 3，然后你必须打包 JavaScript 和 HTML 文件，以便于能够部署到 web 服务器。为此，在项目目录下运行 webpack 即可，然后它会将所有的 js 和 HTML 文件输出到 build 目录。
+- 4，将 js 和 HTML 文件拷贝到 web 服务器上的 web 目录，然后其他人就可以访问你的 dapp 了！
+
+## 9.2，练习
+
+下面是你可以用来进一步体验和开发 Dapp 的几个小练习：
+
+- 1, 当资金被释放后，发送金额的 1% 给仲裁人作为服务费。
+- 2, 目前，任何人都可以终结拍卖和成为仲裁人。实现一个用户必须发送 5 ETH 才能成为仲裁人的功能。他们可以在任何时候改变心意将保证金撤回。那么他们也就不能在参与应用作为仲裁人。
+- 3, 添加一个如果发现仲裁人有恶意行为（与卖方或者买方共谋）的话，销毁保证金的功能。
+- 4, 目前，卖方对于他们的服务没有收到任何评价。实现买方给卖方一个打分的功能。
+
+## 9.3，进阶阅读
+
+Solidity Docs: https://solidity.readthedocs.io/en/develop/
+
+Truffle Docs: http://truffleframework.com/docs/
+
+Ethereum Yellow Paper: https://ethereum.github.io/yellowpaper/paper.pdf
+
+IPFS Docs: https://ipfs.io/docs/
+
+MongoDB Docs: https://docs.mongodb.com/manual/
