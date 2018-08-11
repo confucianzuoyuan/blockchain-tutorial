@@ -1359,3 +1359,317 @@ $("#revealing").submit(function(event) {
    event.preventDefault();
 });
 ```
+
+# 7, 托管服务
+
+## 7.1, 概览
+
+一旦拍卖结束，所有出价方揭示各自出价，赢家诞生。接下来是什么呢？卖方必须将货物发送给买方，并且买方要付钱给卖方。这个时候可能出现几个问题。
+
+- 1, 怎样保证卖方会如约交付货物？卖方可以轻松地拿着钱消失。
+- 2, 如果卖方确实交付了货物，但是买方不承认收到货物怎么办？
+- 3, 如果货物有损，应该返还给买方资金，但是卖方拒绝怎么办？
+
+为了解决所有这些问题，我们创建一个 Multisig Escrow（多重签名托管）合约，里面存放了了买方赢得拍卖的数量，买方，卖方和一个任意的第三方是参与者。托管的资金只能被释放给卖方，或是返回给买方，并且至少需要三个参与者中的两个同意才能执行。
+
+在接下来的几节，我们将会实现托管合约，并当拍卖结束时，在运行时添加创建一个以太坊托管合约的功能。
+
+## 7.2, 托管合约
+
+右侧就是整个合约。尝试在参考右侧代码的情况下，按照以下步骤自主实现合约。
+
+- 1, 创建一个叫做 Escrow 的合约，参数为买方，卖方，任意第三者和产品 id。买方，卖方和第三方实际上都是以太坊地址。
+- 2, 我们必须跟踪所有的参与者，谁同意释放资金给卖家，谁同意返回资金给买家。所以，分别创建一个地址到布尔型的 mapping ，叫做 releaseAmount，另一个为 refundAmount 的 mapping。
+- 3, 我们无法方便地查询上述 mapping 有多少个 key，所以并没有一个很好的方式查看 3 个参与者有多少人投票了释放资金。因此，声明两个变量 releaseCount 和 refundCount。如果 releaseCount 达到 2，我们就释放资金。类似地，如果 refundCount 的值达到 2，我们将资金返回给买家。
+- 4, 创建一个构造函数，参数为所有的参与者和产品 id，并将它们赋值给我们已经声明的变量。记得将购买函数标记为 payable。一个 payable 的构造函数表明，当它初始化时，你可以向合约发送资金。在我们的案例中，托管合约创建后，赢家出价的资金就会发送给它。
+- 5, 实现一个释放资金给卖方的函数。无论是谁调用该函数，它都应该更新 releaseAmount mapping，同时将 release count 加 1。如果 release count 计数达到 2，就是用 solidity 的 transfer 方法将合约里托管的资金发送给卖方。
+- 6, 与 release amount 函数类似，实现将资金撤回给买方的函数，它会更新 refundAmount mapping 并将 refundCount 加 1.如果 refundCount 达到 2，将资金转移给买方。
+- 7, 一旦合约释放完资金，应该禁用所有的函数调用。所以，声明一个叫做 fundsDisbursed 的字段，当资金释放给卖方或是返还给买方时，将其设置为 true。
+
+合约代码如下：
+
+```js
+pragma solidity ^0.4.13;
+contract Escrow {
+ uint public productId;
+ address public buyer;
+ address public seller;
+ address public arbiter;
+ uint public amount;
+ bool public fundsDisbursed;
+ mapping (address => bool) releaseAmount;
+ uint public releaseCount;
+ mapping (address => bool) refundAmount;
+ uint public refundCount;
+
+ event CreateEscrow(uint _productId, address _buyer, address _seller, address _arbiter);
+ event UnlockAmount(uint _productId, string _operation, address _operator);
+ event DisburseAmount(uint _productId, uint _amount, address _beneficiary);
+
+ function Escrow(uint _productId, address _buyer, address _seller, address _arbiter) payable public {
+  productId = _productId;
+  buyer = _buyer;
+  seller = _seller;
+  arbiter = _arbiter;
+  amount = msg.value;
+  fundsDisbursed = false;
+  CreateEscrow(_productId, _buyer, _seller, _arbiter);
+ }
+
+ function escrowInfo() view public returns (address, address, address, bool, uint, uint) {
+  return (buyer, seller, arbiter, fundsDisbursed, releaseCount, refundCount);
+ }
+
+ function releaseAmountToSeller(address caller) public {
+  require(!fundsDisbursed);
+  if ((caller == buyer || caller == seller || caller == arbiter) && releaseAmount[caller] != true) {
+   releaseAmount[caller] = true;
+   releaseCount += 1;
+   UnlockAmount(productId, "release", caller);
+  }
+
+  if (releaseCount == 2) {
+   seller.transfer(amount);
+   fundsDisbursed = true;
+   DisburseAmount(productId, amount, seller);
+  }
+ }
+
+ function refundAmountToBuyer(address caller) public {
+  require(!fundsDisbursed);
+  if ((caller == buyer || caller == seller || caller == arbiter) && refundAmount[caller] != true) {
+   refundAmount[caller] = true;
+   refundCount += 1;
+   UnlockAmount(productId, "refund", caller);
+  }
+
+  if (refundCount == 2) {
+   buyer.transfer(amount);
+   fundsDisbursed = true;
+   DisburseAmount(productId, amount, buyer);
+  }
+ }
+}
+```
+
+## 7.3, 宣布赢家
+
+一旦拍卖揭示阶段结束，我们会关闭拍卖并宣布赢家。这里是拍卖结束时的操作。
+
+- 1, 拍卖由仲裁人结束。当结束时，我们创建有仲裁人，买方和卖方的托管合约（上一节我们已经实现了该合约），并将资金转移到合约。
+- 2, 记住我们只能向买方收取第二高的出价费用。所以，我们需要将差额归还给赢家。
+
+向 app.js 添加一个结束拍卖的功能。并且检查产品状态，显示结束拍卖的按钮。
+
+`product.html`
+
+```html
+<form id="finalize-auction" class="col-sm-6">
+ <input type="hidden" name="product-id" id="product-id" />
+ <button type="submit" class="btn form-submit">Finalize Auction</button>
+</form>
+```
+
+`EcommerceStore.sol`
+
+```js
+import "contracts/Escrow.sol";
+contract EcommerceStore {
+......
+ mapping (uint => address) productEscrow;
+......
+......
+}
+function finalizeAuction(uint _productId) public {
+ Product memory product = stores[productIdInStore[_productId]][_productId];
+ // 48 hours to reveal the bid
+ require(now > product.auctionEndTime);
+ require(product.status == ProductStatus.Open);
+ require(product.highestBidder != msg.sender);
+ require(productIdInStore[_productId] != msg.sender);
+
+ if (product.totalBids == 0) {
+  product.status = ProductStatus.Unsold;
+ } else {
+  // Whoever finalizes the auction is the arbiter
+  Escrow escrow = (new Escrow).value(product.secondHighestBid)(_productId, product.highestBidder, productIdInStore[_productId], msg.sender);
+  productEscrow[_productId] = address(escrow);
+  product.status = ProductStatus.Sold;
+  // The bidder only pays the amount equivalent to second highest bidder
+  // Refund the difference
+  uint refund = product.highestBid - product.secondHighestBid;
+  product.highestBidder.transfer(refund);
+ }
+ stores[productIdInStore[_productId]][_productId] = product;
+
+ }
+
+ function escrowAddressForProduct(uint _productId) view public returns (address) {
+ return productEscrow[_productId];
+ }
+
+ function escrowInfo(uint _productId) view public returns (address, address, address, bool, uint, uint) {
+ return Escrow(productEscrow[_productId]).escrowInfo();
+}
+```
+
+`app.js`
+
+```js
+$("#finalize-auction").submit(function(event) {
+  $("#msg").hide();
+  let productId = $("#product-id").val();
+  EcommerceStore.deployed().then(function(i) {
+  i.finalizeAuction(parseInt(productId), {from: web3.eth.accounts[2], gas: 4400000}).then(
+   function(f) {
+   $("#msg").show();
+   $("#msg").html("The auction has been finalized and winner declared.");
+   console.log(f)
+   location.reload();
+   }
+  ).catch(function(e) {
+   console.log(e);
+   $("#msg").show();
+   $("#msg").html("The auction can not be finalized by the buyer or seller, only a third party aribiter can finalize it");
+  })
+  });
+  event.preventDefault();
+});
+```
+
+`Updated renderProductDetails function`
+
+```js
+function renderProductDetails(productId) {
+ EcommerceStore.deployed().then(function(i) {
+ i.getProduct.call(productId).then(function(p) {
+  console.log(p);
+  let content = "";
+  ipfs.cat(p[4]).then(function(stream) {
+  stream.on('data', function(chunk) {
+  // do stuff with this chunk of data
+  content += chunk.toString();
+  $("#product-desc").append("<div>" + content+ "</div>");
+  })
+  });
+
+  $("#product-image").append("<img src='https://ipfs.io/ipfs/" + p[3] + "' width='250px' />");
+  $("#product-price").html(displayPrice(p[7]));
+  $("#product-name").html(p[1].name);
+  $("#product-auction-end").html(displayEndHours(p[6]));
+  $("#product-id").val(p[0]);
+  $("#revealing, #bidding, #finalize-auction, #escrow-info").hide();
+  let currentTime = getCurrentTimeInSeconds();
+   if (parseInt(p[8]) == 1) {
+  $("#product-status").html("Product sold");
+  } else if(parseInt(p[8]) == 2) {
+  $("#product-status").html("Product was not sold");
+  } else if(currentTime < parseInt(p[6])) {
+  $("#bidding").show();
+  } else if (currentTime < (parseInt(p[6]) + 600)) {
+  $("#revealing").show();
+  } else {
+  $("#finalize-auction").show();
+  }
+ })
+ })
+}
+```
+
+## 7.4, 释放资金
+
+托管合约由运行时从 EcommerceStore 合约创建。无论是买方，卖方还是仲裁人都无法直接接入。所以，我们在 EcommerceStore 合约中实现跳过函数的功能，EcommerceStore 合约会调用托管合约里面的 release 和 refund 函数。我们也定义几个获取托管地址和细节的帮助函数。
+
+`EcommerceStore.sol`
+
+```js
+function releaseAmountToSeller(uint _productId) public {
+  Escrow(productEscrow[_productId]).releaseAmountToSeller(msg.sender);
+}
+
+function refundAmountToBuyer(uint _productId) public {
+  Escrow(productEscrow[_productId]).refundAmountToBuyer(msg.sender);
+}
+```
+
+`app.js`
+
+If product status is "Sold", show the escrow information. Replace the line  $("#product-status").html("Product sold"); with the below line to display the auction results.
+
+```js
+  if (parseInt(p[8]) == 1) {
+   EcommerceStore.deployed().then(function(i) {
+    $("#escrow-info").show();
+    i.highestBidderInfo.call(productId).then(function(f) {
+     if (f[2].toLocaleString() == '0') {
+      $("#product-status").html("Auction has ended. No bids were revealed");
+     } else {
+      $("#product-status").html("Auction has ended. Product sold to " + f[0] + " for " + displayPrice(f[2]) +
+       "The money is in the escrow. Two of the three participants (Buyer, Seller and Arbiter) have to " +
+       "either release the funds to seller or refund the money to the buyer");
+     }
+    })
+    i.escrowInfo.call(productId).then(function(f) {
+     $("#buyer").html('Buyer: ' + f[0]);
+     $("#seller").html('Seller: ' + f[1]);
+     $("#arbiter").html('Arbiter: ' + f[2]);
+     if(f[3] == true) {
+      $("#release-count").html("Amount from the escrow has been released");
+     } else {
+      $("#release-count").html(f[4] + " of 3 participants have agreed to release funds");
+      $("#refund-count").html(f[5] + " of 3 participants have agreed to refund the buyer");
+     }
+    })
+   })
+  }
+```
+
+Also add the handlers to release or refund the funds
+
+```js
+$("#release-funds").click(function() {
+ let productId = new URLSearchParams(window.location.search).get('id');
+ EcommerceStore.deployed().then(function(f) {
+  $("#msg").html("Your transaction has been submitted. Please wait for few seconds for the confirmation").show();
+  console.log(productId);
+  f.releaseAmountToSeller(productId, {from: web3.eth.accounts[0], gas: 440000}).then(function(f) {
+   console.log(f);
+   location.reload();
+  }).catch(function(e) {
+   console.log(e);
+  })
+ });
+});
+
+$("#refund-funds").click(function() {
+ let productId = new URLSearchParams(window.location.search).get('id');
+ EcommerceStore.deployed().then(function(f) {
+  $("#msg").html("Your transaction has been submitted. Please wait for few seconds for the confirmation").show();
+  f.refundAmountToBuyer(productId, {from: web3.eth.accounts[0], gas: 440000}).then(function(f) {
+   console.log(f);
+   location.reload();
+  }).catch(function(e) {
+   console.log(e);
+  })
+ });
+
+ alert("refund the funds!");
+});
+```
+
+`product.html`
+
+Add the following elements to display the escrow information
+
+```html
+<div id="product-status"></div>
+<div id="escrow-info">
+ <div id="buyer"></div>
+ <div id="seller"></div>
+ <div id="arbiter"></div>
+ <div id="release-count"></div>
+ <div id="refund-count"></div>
+ <a id="release-funds" class="btn form-submit">Release Amount to Seller</a>
+ <a id="refund-funds" class="btn form-submit">Refund Amount to Buyer</a>
+</div>
+```
