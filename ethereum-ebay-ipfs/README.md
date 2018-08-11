@@ -868,3 +868,494 @@ function buildProduct(product) {
 - 4, 通过用户在表单中输入的值，还有产品哈希，介绍哈希将产品添加到区块链。
 
 ![表单](./images/add-product-flow.png)
+
+## 5.6，陈列表单
+
+在 /app 目录下创建一个叫做 list-item.html 的新文件，内容在右侧。它是简单的 HTML 表格，其中的字段是为了手机产品细节。更新 webpack 配置将文件在打包时包含进去。
+
+`webpack.config.js`
+
+```js
+.....
+new CopyWebpackPlugin([
+{ from: './app/index.html', to: "index.html" },
+{ from: './app/list-item.html', to: "list-item.html" }
+])
+....
+```
+
+添加到 webpack 配置后重启前端服务器。
+
+如果一切设置正确，访问 http://localhost:8081/list-item.html 应该可以如下内容
+
+![](./images/list-product.png)
+
+代码如下：
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Decentralized Ecommerce Store</title>
+ <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+ <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+ <script src="./app.js"></script>
+</head>
+<body>
+ <div class="container">
+  <h1>List an item</h1>
+  <div class="container">
+   <div class="row">
+    <div style="display: none;" class="alert alert-success" id="msg"></div>
+    <form class="form-horizontal col-sm-5" id="add-item-to-store">
+     <div class="form-group">
+      <label for="product-name" class="col-sm-2 control-label">Name</label>
+      <div class="col-sm-10">
+       <input type="text" name="product-name" class="form-control" id="product-name" placeholder="iPhone, Jeans, shoes etc" required="required"></input>
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-description" class="col-sm-2 control-label">Description</label>
+      <div class="col-sm-10">
+       <textarea class="form-control" name="product-description" rows="8" id="product-description" placeholder="Enter detailed product description" required="required"></textarea>
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-image" class="col-sm-2 control-label">Upload product photo</label>
+      <div class="col-sm-10">
+       <input type="file" name="product-image" class="form-control" id="product-image" required="required">
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-category" class="col-sm-2 control-label">Category</label>
+      <div class="col-sm-10">
+       <select class="form-control" name="product-category" id="product-category">
+        <option>Art</option>
+        <option>Books</option>
+        <option>Cameras</option>
+        <option>Cell Phones & Accessories</option>
+        <option>Clothing</option>
+        <option>Coins & Paper Money</option>
+        <option>Collectibles</option>
+        <option>Computers/Tablets & Networking</option>
+        <option>Consumer Electronics</option>
+        <option>Crafts</option>
+        <option>DVDs & Movies</option>
+        <option>Entertainment Memorabilia</option>
+        <option>Gift Cards & Coupons</option>
+        <option>Music</option>
+        <option>Musical Instruments & Gear</option>
+        <option>Pet Supplies</option>
+        <option>Pottery & Glass</option>
+        <option>Sporting Goods</option>
+        <option>Stamps</option>
+        <option>Tickets</option>
+        <option>Toys & Hobbies</option>
+        <option>Video Games</option>
+       </select>
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-price" class="col-sm-2 control-label">Start Price</label>
+      <div class="col-sm-10">
+       <input type="text" class="form-control" name="product-price" id="product-price" required="required"></input>
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-condition" class="col-sm-2 control-label">Product Condition</label>
+      <div class="col-sm-10">
+       <select class="form-control" name="product-condition" id="product-condition">
+        <option value="1">New</option>
+        <option value="2">Used</option>
+       </select>
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-price" class="col-sm-2 control-label">Auction Start Time</label>
+      <div class="col-sm-10">
+       <input type="datetime-local" class="form-control" name="product-auction-start" id="product-auction-start" required="required"></input>
+      </div>
+     </div>
+     <div class="form-group">
+      <label for="product-price" class="col-sm-2 control-label">Days to run the auction</label>
+      <div class="col-sm-10">
+       <select class="form-control" name="product-auction-end" id="product-auction-end">
+        <option>1</option>
+        <option>3</option>
+        <option>5</option>
+        <option>7</option>
+        <option>10</option>
+       </select>
+      </div>
+     </div>
+     <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+       <button type="submit" class="btn btn-primary">Add Product To Store</button>
+      </div>
+     </div>
+    </form>
+   </div>
+  </div>
+ </div>
+</body>
+</html>
+```
+
+## 5.7，上传到 IPFS
+
+让我们实现上传产品图片和描述文本到 IPFS 必要的函数。
+
+Line 5 - 9: 当用户点击 html 中的 file 字段并选择一个文件上传时，触发change() 事件。如右侧所示将图片内容读取到一个缓冲区。
+
+Line 11 - 23: 我们使用 JavaScript ipfs 库将图片上传到 IPFS。我们已经在 app.js 初始化了 ipfs 对象。我们使用 ipfs.add 函数将文件上传到 IPFS。将这个调用封装在一个 promise 中，以便于当我们调用 saveImageOnIpfs（见下一节），可以等待上传完毕然后执行其他操作。
+
+Line 24 - 36: 与上传图片类似，将产品介绍上传到 IPFS。
+
+注意我们仅仅是定义了将资源上传到 IPFS 的函数。我们会在下一节调用这些函数。
+
+```js
+window.App = {
+ start: function() {
+   ......
+  var reader;
+
+  $("#product-image").change(function(event) {
+    const file = event.target.files[0]
+    reader = new window.FileReader()
+    reader.readAsArrayBuffer(file)
+  });
+.....
+
+function saveImageOnIpfs(reader) {
+ return new Promise(function(resolve, reject) {
+  const buffer = Buffer.from(reader.result);
+  ipfs.add(buffer)
+  .then((response) => {
+   console.log(response)
+   resolve(response[0].hash);
+  }).catch((err) => {
+   console.error(err)
+   reject(err);
+  })
+ })
+}
+
+function saveTextBlobOnIpfs(blob) {
+ return new Promise(function(resolve, reject) {
+  const descBuffer = Buffer.from(blob, 'utf-8');
+  ipfs.add(descBuffer)
+  .then((response) => {
+   console.log(response)
+   resolve(response[0].hash);
+  }).catch((err) => {
+   console.error(err)
+   reject(err);
+  })
+ })
+}
+```
+
+## 5.8，保存产品
+
+保存产品所需的大部分函数都已经被定义了。现在我们需要处理 JavaScript 事件，当用户点击 “Save Product” 时会触发该事件，然后调用相关函数。
+
+保存产品的步骤如下：
+
+- 1, 调用函数将图片上传到 IPFS。
+- 2, 一旦图片上传完毕，继续上传产品介绍。
+- 3, 最后，将所上传资源的哈希截图，调用合约函数将所有细节保存到区块链。
+- 4, 将代码添加到 app.js 并保存。
+
+现在，填充表单里的所有文本框，并点击 submit 按钮。你的产品已经保存到区块链了！你可以从 truffle 控制台检查 productIndex 的值是否已经加 1。你也可以访问 http://localhost:5001/webui ，点击文件你应该能够看到上传到 IPFS 的图片和描述信息。
+
+如果遇到问题，看一下浏览器的控制台是否有错误。
+
+```js
+// Remember to include this submit handler inside the start: function so the handler gets registered when the page loads
+window.App = {
+ start: function() {
+......
+......
+$("#add-item-to-store").submit(function(event) {
+   const req = $("#add-item-to-store").serialize();
+   let params = JSON.parse('{"' + req.replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
+   let decodedParams = {}
+   Object.keys(params).forEach(function(v) {
+    decodedParams[v] = decodeURIComponent(decodeURI(params[v]));
+   });
+   saveProduct(reader, decodedParams);
+   event.preventDefault();
+});
+......
+......
+  }
+}
+function saveProduct(reader, decodedParams) {
+  let imageId, descId;
+  saveImageOnIpfs(reader).then(function(id) {
+    imageId = id;
+    saveTextBlobOnIpfs(decodedParams["product-description"]).then(function(id) {
+      descId = id;
+       saveProductToBlockchain(decodedParams, imageId, descId);
+    })
+ })
+}
+
+function saveProductToBlockchain(params, imageId, descId) {
+  console.log(params);
+  let auctionStartTime = Date.parse(params["product-auction-start"]) / 1000;
+  let auctionEndTime = auctionStartTime + parseInt(params["product-auction-end"]) * 24 * 60 * 60
+
+  EcommerceStore.deployed().then(function(i) {
+    i.addProductToStore(params["product-name"], params["product-category"], imageId, descId, auctionStartTime,
+   auctionEndTime, web3.toWei(params["product-price"], 'ether'), parseInt(params["product-condition"]), {from: web3.eth.accounts[0], gas: 440000}).then(function(f) {
+   console.log(f);
+   $("#msg").show();
+   $("#msg").html("Your product was successfully added to your store!");
+  })
+ });
+}
+```
+
+# 6, Web 拍卖
+
+## 6.1，产品 HTML
+
+在这一章，我们会实现在单独页面渲染每个产品的功能。除了仅仅显示产品细节，我们也会实现出价和揭示出价的功能。在 /app 目录下创建一个叫做 product.html 的文件，内容在右侧。这是另一个简单的 HTML 文件，它有显示产品细节的占位符。我们也创建了两个表单，一个用于出价，另一个用于揭示出价。
+
+Bid Form: 出价单有三个文本框，分别输入出价数量，secret 字符串和要发送的数量。
+
+Reveal Form: 为了揭示出价，我们需要用户输入出价数量和 secret 字符串。我们有 2 个字段来收集这两个信息。
+
+与将 list.item.html 加入到 webpack 配置一样，也将这个文件加入到 webpack。
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Decentralized Ecommerce Store</title>
+ <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+ <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+ <script src="./app.js"></script>
+</head>
+<body>
+ <div class="container">
+  <h1 class="text-center">Product Details</h1>
+  <div class="container">
+   <div class="row" id="product-details">
+    <div style="display: none;" class="alert alert-success" id="msg"></div>
+    <div class="col-sm-12">
+     <div class="col-sm-4">
+      <div id="product-image"></div>
+      <div id="product-name"></div>
+      <div id="product-auction-end"></div>
+     </div>
+     <div class="col-sm-8">
+      <h3>Start Price: <span id="product-price"></span></h3>
+      <form id="bidding" class="col-sm-4">
+       <h4>Your Bid</h4>
+       <div class="form-group">
+        <label for="bid-amount">Enter Bid Amount</label>
+        <input type="text" class="form-control" name="bid-amount" id="bid-amount" placeholder="Amount > Start Price" required="required">
+       </div>
+       <div class="form-group">
+        <label for="bid-send-amount">Enter Amount To Send</label>
+        <input type="text" class="form-control" name="bid-send-amount" id="bid-send-amount" placeholder="Amount >= Bid Amount" required="required">
+       </div>
+       <div class="form-group">
+        <label for="secret-text">Enter Secret Text</label>
+        <input type="text" class="form-control" name="secret-text" id="secret-text" placeholder="Any random text" required="required">
+       </div>
+       <input type="hidden" name="product-id" id="product-id" />
+       <button type="submit" class="btn btn-primary">Submit Bid</button>
+      </form>
+      <form id="revealing" class="col-sm-4">
+       <h4>Reveal Bid</h4>
+       <div class="form-group">
+        <label for="actual-amount">Amount You Bid</label>
+        <input type="text" class="form-control" name="actual-amount" id="actual-amount" placeholder="Amount > Start Price" required="required">
+       </div>
+       <div class="form-group">
+        <label for="reveal-secret-text">Enter Secret Text</label>
+        <input type="text" class="form-control" name="reveal-secret-text" id="reveal-secret-text" placeholder="Any random text" required="required">
+       </div>
+       <input type="hidden" name="product-id" id="product-id" />
+       <button type="submit" class="btn btn-primary">Reveal Bid</button>
+      </form>
+     </div>
+    </div>
+    <div id="product-desc" class="col-sm-12">
+     <h2>Product Description</h2>
+    </div>
+   </div>
+  </div>
+ </div>
+</body>
+</html>
+```
+
+## 6.2, 产品 JS
+
+### 更新 app.js
+
+如果你对 JavaScript 不太熟悉的话，右侧代码可能会显得比较复杂。让我们来分解一下，理解这些代码做了些什么
+
+- 1, 为了保持代码简洁，对这三个页面我们都用了同一个 app.js。if($("#product-details").length > 0) 仅是用于检查我们是否在产品细节的页面，如果在，调用 renderProductDetails 函数渲染产品细节。
+- 2, 当我们访问 product.html 页面时，我们将一个请求参数 id=productId 包含在了 url 里面。我们用这个参数从区块链获取产品。
+- 3, 我们可以轻松地调用合约的 getProduct 获取产品细节。我们已经有了所存储的产品图片和描述信息的 IPFS 哈希。只需要用哈希即可渲染图片。但是对于描述信息，我们并不是使用一个指向描述信息的 iframe 或链接，而是使用 IPFS cat 命令来输出我们存储的描述文件的内容，然后显示在我们的 HTML 文件。
+- 4, 我们也定义了几个帮助函数，用于帮助显示更简洁。
+
+`app.js`
+
+```js
+  // This if block should be with in the window.App = {} function
+  if($("#product-details").length > 0) {
+   //This is product details page
+   let productId = new URLSearchParams(window.location.search).get('id');
+   renderProductDetails(productId);
+  }
+....
+....
+....
+function renderProductDetails(productId) {
+ EcommerceStore.deployed().then(function(i) {
+  i.getProduct.call(productId).then(function(p) {
+   console.log(p);
+   let content = "";
+   ipfs.cat(p[4]).then(function(file) {
+    content = file.toString();
+    $("#product-desc").append("<div>" + content+ "</div>");
+   });
+
+   $("#product-image").append("<img src='https://ipfs.io/ipfs/" + p[3] + "' width='250px' />");
+   $("#product-price").html(displayPrice(p[7]));
+   $("#product-name").html(p[1].name);
+   $("#product-auction-end").html(displayEndHours(p[6]));
+   $("#product-id").val(p[0]);
+   $("#revealing, #bidding").hide();
+   let currentTime = getCurrentTimeInSeconds();
+   if(currentTime < p[6]) {
+    $("#bidding").show();
+   } else if (currentTime - (60) < p[6]) {
+    $("#revealing").show();
+   }
+  })
+ })
+}
+
+
+function getCurrentTimeInSeconds(){
+ return Math.round(new Date() / 1000);
+}
+
+function displayPrice(amt) {
+ return 'Ξ' + web3.fromWei(amt, 'ether');
+}
+
+
+function displayEndHours(seconds) {
+ let current_time = getCurrentTimeInSeconds()
+ let remaining_seconds = seconds - current_time;
+
+ if (remaining_seconds <= 0) {
+  return "Auction has ended";
+ }
+
+ let days = Math.trunc(remaining_seconds / (24*60*60));
+
+ remaining_seconds -= days*24*60*60
+ let hours = Math.trunc(remaining_seconds / (60*60));
+
+ remaining_seconds -= hours*60*60
+
+ let minutes = Math.trunc(remaining_seconds / 60);
+
+ if (days > 0) {
+  return "Auction ends in " + days + " days, " + hours + ", hours, " + minutes + " minutes";
+ } else if (hours > 0) {
+  return "Auction ends in " + hours + " hours, " + minutes + " minutes ";
+ } else if (minutes > 0) {
+  return "Auction ends in " + minutes + " minutes ";
+ } else {
+  return "Auction ends in " + remaining_seconds + " seconds";
+ }
+}
+```
+
+## 6.3, 出价和揭示出价
+
+在上一节，我们已经加入了显示基于两个表单（出价或是揭示出价）之一的拍卖结束时间的逻辑。定义出价和揭示出价如何处理。这些合约调用在之前的 truffle 控制台我们已经用过，我们仅需要拷贝到 这里的 JavaScript 文件即可。
+
+如右侧所示，记得将所有的 handler 加到 start: function() { } 里面。
+
+### 练习
+
+- 1, 在揭示出价部分，我们仅仅显示了一条刚刚公开出价的信息。改进代码，显示最高出价者的信息，同时显示他们的出价是否领先，或是已经输掉了拍卖。
+- 2, 在 product details 页面加入一个新的 section，列出到目前为止所有已经揭示的出价及其数量。
+- 3, 显示接收到的出价总数，以及已经揭示的出价总数。
+
+下面定义的 handler 应该放在 start 函数里面。
+
+```js
+window.App = {
+ start: function() {
+   ......
+  $("#bidding").submit(function(event) {
+     .....
+  });
+  
+   $("#revealing").submit(function(event) {
+     .....
+   });
+   ......
+   ......
+  }
+};
+```
+
+`Place Bid`
+
+```js
+$("#bidding").submit(function(event) {
+   $("#msg").hide();
+   let amount = $("#bid-amount").val();
+   let sendAmount = $("#bid-send-amount").val();
+   let secretText = $("#secret-text").val();
+   let sealedBid = '0x' + ethUtil.sha3(web3.toWei(amount, 'ether') + secretText).toString('hex');
+   let productId = $("#product-id").val();
+   console.log(sealedBid + " for " + productId);
+   EcommerceStore.deployed().then(function(i) {
+    i.bid(parseInt(productId), sealedBid, {value: web3.toWei(sendAmount), from: web3.eth.accounts[1], gas: 440000}).then(
+     function(f) {
+      $("#msg").html("Your bid has been successfully submitted!");
+      $("#msg").show();
+      console.log(f)
+     }
+    )
+   });
+   event.preventDefault();
+});
+```
+
+`Reveal Bid`
+
+```js
+$("#revealing").submit(function(event) {
+   $("#msg").hide();
+   let amount = $("#actual-amount").val();
+   let secretText = $("#reveal-secret-text").val();
+   let productId = $("#product-id").val();
+   EcommerceStore.deployed().then(function(i) {
+    i.revealBid(parseInt(productId), web3.toWei(amount).toString(), secretText, {from: web3.eth.accounts[1], gas: 440000}).then(
+     function(f) {
+      $("#msg").show();
+      $("#msg").html("Your bid has been successfully revealed!");
+      console.log(f)
+     }
+    )
+   });
+   event.preventDefault();
+});
+```
