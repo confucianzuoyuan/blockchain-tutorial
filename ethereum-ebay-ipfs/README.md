@@ -648,3 +648,223 @@ $ added QmStqeYPDCTbgKGUwns2nZixC5dBDactoCe1FB8htpmrt1 iphone.png
 $ ./ipfs add description.html
 $ added QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk description.html
 ```
+
+# 5，Web 产品
+
+## 5.1，概览
+
+我们已经实现了创建产品的合约，如何对商品出价和揭示出价。我们也学习了如何通过命令行使用 IPFS。
+
+接下来两节，我们会实现以下内容：
+
+- 1, 一个新的网页，我们在上面看到区块链的所有产品。
+- 2, 一个用户用来添加产品到区块链的网页。
+- 3, 第三个页面，用户可以看到产品细节，上面的出价以及揭示他们的出价。
+
+为了通过前端与 IPFS 进行交互，我们是用到一个叫做 ipfs-api 的 JavaScript 库。将这个库添加到 package.json 并运行 npm install。打开 app/javascript/app.js 并移除所有 MetaCoin（truffle 创建的示例应用）相关的代码。剩下合约和初始化后的 IPFS 空文件类似右侧的文件。
+
+`package.json`
+
+```js
+"devDependencies": {
+  ...
+  ...
+  "ipfs-api": "18.1.1"
+}
+```
+
+`app/javascripts/app.js`
+
+```js
+// Import the page's CSS. Webpack will know what to do with it.
+import "../stylesheets/app.css";
+
+// Import libraries we need.
+import { default as Web3} from 'web3';
+import { default as contract } from 'truffle-contract'
+import ecommerce_store_artifacts from '../../build/contracts/EcommerceStore.json'
+
+var EcommerceStore = contract(ecommerce_store_artifacts);
+
+const ipfsAPI = require('ipfs-api');
+const ethUtil = require('ethereumjs-util');
+
+const ipfs = ipfsAPI({host: 'localhost', port: '5001', protocol: 'http'});
+
+window.App = {
+ start: function() {
+  var self = this;
+ },
+
+};
+
+window.addEventListener('load', function() {
+ // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+ if (typeof web3 !== 'undefined') {
+  console.warn("Using web3 detected from external source. If you find that your accounts don't appear or you have 0 MetaCoin, ensure you've configured that source properly. If using MetaMask, see the following link. Feel free to delete this warning. :) http://truffleframework.com/tutorials/truffle-and-metamask")
+  // Use Mist/MetaMask's provider
+  window.web3 = new Web3(web3.currentProvider);
+ } else {
+  console.warn("No web3 detected. Falling back to http://localhost:8545. You should remove this fallback when you deploy live, as it's inherently insecure. Consider switching to Metamask for development. More info here: http://truffleframework.com/tutorials/truffle-and-metamask");
+  // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+  window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+ }
+
+ App.start();
+});
+```
+
+## 5.2，种子区块链
+
+当开发本应用时，为了实现各种用户场景和测试，我们将会不断地将产品添加到区块链。与其通过 truffle 控制台一个一个地添加，我们会创建一个有一些产品的脚本，任何时候我们需要更多的产品时，就运行该脚本。这个脚本你想运行多少次都可以。
+
+创建一个右侧所示的种子文件，执行 truffle exec 命令来执行该脚本。
+
+这个文件并没有什么特别之处。你已经知道了如何向商店添加产品。在这里你做的所有事情就是脚本化而已，将合约调用放到一个脚本并运行脚本。
+
+你会看到每个产品都有一对很长的哈希。这些就是我们在之前一节上传的图片和描述信息的 IPFS 哈希。n你的哈希可能会不同，你可以随意改变它或是不管也可以。
+
+`seed.js`
+
+```js
+Eutil = require('ethereumjs-util');
+EcommerceStore = artifacts.require("./EcommerceStore.sol");
+module.exports = function(callback) {
+ current_time = Math.round(new Date() / 1000);
+ amt_1 = web3.toWei(1, 'ether');
+ EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 5', 'Cell Phones & Accessories', 'QmStqeYPDCTbgKGUwns2nZixC5dBDactoCe1FB8htpmrt1', 'QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk', current_time, current_time + 200, 2*amt_1, 0).then(function(f) {console.log(f)})});
+ EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 5s', 'Cell Phones & Accessories', 'QmStqeYPDCTbgKGUwns2nZixC5dBDactoCe1FB8htpmrt1', 'QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk', current_time, current_time + 400, 3*amt_1, 1).then(function(f) {console.log(f)})});
+ EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 6', 'Cell Phones & Accessories', 'QmStqeYPDCTbgKGUwns2nZixC5dBDactoCe1FB8htpmrt1', 'QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk', current_time, current_time + 14, amt_1, 0).then(function(f) {console.log(f)})}); 
+ EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 6s', 'Cell Phones & Accessories', 'QmStqeYPDCTbgKGUwns2nZixC5dBDactoCe1FB8htpmrt1', 'QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk', current_time, current_time + 86400, 4*amt_1, 1).then(function(f) {console.log(f)})});
+ EcommerceStore.deployed().then(function(i) {i.addProductToStore('iphone 7', 'Cell Phones & Accessories', 'QmStqeYPDCTbgKGUwns2nZixC5dBDactoCe1FB8htpmrt1', 'QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk', current_time, current_time + 86400, 5*amt_1, 1).then(function(f) {console.log(f)})});
+ EcommerceStore.deployed().then(function(i) {i.addProductToStore('Jeans', 'Clothing, Shoes & Accessories', 'QmZwfUuHwBhwshGfo4HEvvvZwcdrppas156uNRxEVU3VYr', 'QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk', current_time, current_time + 86400 + 86400 + 86400, 5*amt_1, 1).then(function(f) {console.log(f)})});
+ EcommerceStore.deployed().then(function(i) {i.productIndex.call().then(function(f){console.log(f)})});
+}
+```
+
+`Run the seed script`
+
+```sh
+$ truffle exec seed.js
+```
+
+## 5.3，HTML 设置
+
+当用户访问我们的 Dapp 时，他们第一眼看到的应该是商店里的产品列表。truffle 已经在 app/index.html 创建了一个 index 文件。用右侧内容替换 index 文件内容。
+
+它是一个框架文件，主要有两块内容，一个用来显示目前活跃并可出价的产品，一个用来显示拍卖已结束处于揭示出价阶段的产品。我们也会支持通过各种目录过滤产品（手机，衣服，礼品卡片等等）
+
+注意 line 8 我们包含了 app.js。与区块链交互的所有逻辑，IPFS 和后端服务器（我们会在下一章实现）渲染都在 app.js。
+
+这里是一个简单的 css 文件，你可以复制并添加到 app/stylesheets/app.css，这样就不用担心样式问题了：https://s3.us-east-2.amazonaws.com/zastrin-course-assets/ecomm.css
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Decentralized Ecommerce Store</title>
+ <link href='https://fonts.proxy.ustclug.org/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+ <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+ <script src="./app.js"></script>
+</head>
+<body>
+ <div class="container-fluid">
+  <h1>Ecommerce Store</h1>
+  <div>Total Products: <span id="total-products"></span></div>
+  <a href="list-item.html" class="btn btn-primary">List Item</a>
+  <div class="row">
+   <div class="col-sm-2">
+    <h2>Categories</h2>
+    <div id="categories">
+    </div>
+   </div>
+   <div class="col-sm-10">
+    <div class="row">
+     <h2 class="text-center">Products To Buy</h2>
+     <div class="row">
+      <div class="row" id="product-list">
+      </div>
+     </div>
+    </div>
+    <div class="row">
+     <h2 class="text-center">Products In Reveal Stage</h2>
+     <div class="row">
+      <div class="row" id="product-reveal-list">
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</body>
+</html>
+```
+
+## 5.4，渲染产品
+
+让我们来查询区块链并渲染一些产品。这里是步骤：
+
+- 1，在 start 函数里面，为合约 artifact 设置提供者并调用叫做 renderStore 的函数。
+- 2，创建一个叫做 renderStore 的函数，它会查询区块链（通过调用 getProduct），并将结果附加到 index.html 里面定义的 product-list div。目前，仅需硬编码通过 id 1 和 2 查询产品即可。这仅仅是一个中间过程，最终会进行改进。
+
+如果你还没有启动前端服务器，运行 npm run dev 并访问 http://localhost:8081/。（你的端口可能会不一样，检查一下运行命令时的输出内容，里面会有端口号）。如果一切顺利，你应该看到下面这样的页面
+
+![首页](./images/ebay-dapp-frontend-1.png)
+
+它非常简洁，只有以 wei 显示的价格，以 seconds 显示的拍卖开始和结束时间等等。目前仅是中间过程，我们会在未来几节慢慢改进该页。
+
+`app.js`
+
+```js
+window.App = {
+ start: function() {
+  var self = this;
+
+  EcommerceStore.setProvider(web3.currentProvider);
+  renderStore();
+ }
+};
+```
+
+Add this to app.js but outside the window.App block
+
+In the rest of the course, we will add all the function definitions outside the window.App block and only include the function invocations and event handlers inside it.
+
+```js
+function renderStore() {
+ EcommerceStore.deployed().then(function(i) {
+  i.getProduct.call(1).then(function(p) {
+   $("#product-list").append(buildProduct(p));
+  });
+  i.getProduct.call(2).then(function(p) {
+   $("#product-list").append(buildProduct(p));
+  });
+ });
+}
+
+function buildProduct(product) {
+ let node = $("<div/>");
+ node.addClass("col-sm-3 text-center col-margin-bottom-1");
+ node.append("<img src='https://ipfs.io/ipfs/" + product[3] + "' width='150px' />");
+ node.append("<div>" + product[1]+ "</div>");
+ node.append("<div>" + product[2]+ "</div>");
+ node.append("<div>" + product[5]+ "</div>");
+ node.append("<div>" + product[6]+ "</div>");
+ node.append("<div>Ether " + product[7] + "</div>");
+ return node;
+}
+```
+
+## 5.5，列出产品
+
+我们已经能够成功地在主页渲染产品。现在让我们开放将产品添加到区块链的功能。记住，我们已经实现了添加产品的合约代码。这一步是将合约集成到 web 前端。
+
+这个特性有点复杂，所以我们来分解步骤：
+
+- 1, 首先，创建一个简单的 HTML 表单，里面的所有字段与我们的产品相匹配。
+- 2, 使用 IPFS JavaScript api 将产品图片上传到 IPFS。
+- 3, 如果成功，将产品介绍上传到 IPFS。
+- 4, 通过用户在表单中输入的值，还有产品哈希，介绍哈希将产品添加到区块链。
+
+![表单](./images/add-product-flow.png)
