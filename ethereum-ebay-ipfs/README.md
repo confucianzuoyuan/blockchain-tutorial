@@ -2069,3 +2069,7 @@ Ethereum Yellow Paper: https://ethereum.github.io/yellowpaper/paper.pdf
 IPFS Docs: https://ipfs.io/docs/
 
 MongoDB Docs: https://docs.mongodb.com/manual/
+
+## 附注
+
+ipfs在本地启动时，默认地址为：http://localhost:8080, 如果要访问本地刚上传的文件，则url为：http://localhost:8080/ipfs/hash
