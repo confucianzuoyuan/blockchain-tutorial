@@ -726,6 +726,8 @@ window.addEventListener('load', function() {
 
 `seed.js`
 
+里面的哈希值要注意替换成自己上传上去的图片和描述的哈希。
+
 ```js
 Eutil = require('ethereumjs-util');
 EcommerceStore = artifacts.require("./EcommerceStore.sol");
@@ -2072,4 +2074,6 @@ MongoDB Docs: https://docs.mongodb.com/manual/
 
 ## 附注
 
-ipfs在本地启动时，默认地址为：http://localhost:8080, 如果要访问本地刚上传的文件，则url为：http://localhost:8080/ipfs/hash
+1, ipfs在本地启动时，默认地址为：http://localhost:8080, 如果要访问本地刚上传的文件，则url为：http://localhost:8080/ipfs/hash
+
+2, webpack会将文件打包到build文件夹下，所以`index.html`中会有`src="./app.js"`，这里的`app.js`就是打包生成的。
