@@ -106,6 +106,7 @@ Proposer通过向某个Acceptors集合发送需要被通过的提案请求来产
 >Phase 1.
 >- a. Proposer选择一个提案编号 n ，然后向Acceptors的某个majority集合的成员发送编号为 n 的prepare请求。
 >- b. 如果一个Acceptor收到一个编号为 n 的prepare请求，且 n 大于它已经响应的所有prepare请求的编号，那么它就会保证不会再通过(accept)任何编号小于 n 的提案，同时将它已经通过的最大编号的提案(如果存在的话)作为响应。
+>
 >Phase 2.
 >- a. 如果Proposer收到来自半数以上的Acceptor对于它的prepare请求(编号为 n )的响应，那么它就会发送一个针对编号为 n ，value值为 v 的提案的accept请求给Acceptors，在这里 v 是收到的响应中编号最大的提案的值，如果响应中不包含提案，那么它就是任意值。
 >- b. 如果Acceptor收到一个针对编号 n 的提案的accept请求，只要它还未对编号大于 n 的prepare请求作出响应，它就可以通过这个提案。
