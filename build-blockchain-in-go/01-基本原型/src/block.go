@@ -27,7 +27,8 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		Timestamp:     time.Now().Unix(),
 		PrevBlockHash: prevBlockHash,
 		Hash:          []byte{},
-		Data:          []byte(data)}
+		Data:          []byte(data),
+    }
 
 	block.SetHash()
 
