@@ -13,7 +13,7 @@ const targetBits = 24
 
 const maxNonce = math.MaxInt64
 
-// 每个块的工作量都必须要证明，所有有个指向 Block 的指针
+// 每个块的工作量都必须要证明，所以有个指向 Block 的指针
 // target 是目标，我们最终要找的哈希必须要小于目标
 type ProofOfWork struct {
 	block  *Block
