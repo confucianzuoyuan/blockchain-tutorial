@@ -417,7 +417,7 @@ func handleConnetion(conn net.Conn, bc *Blockchain) {
 	case "getdata":
 		handleGetData(request, bc)
 	case "tx":
-		handleTx(request, gc)
+		handleTx(request, bc)
 	case "version":
 		handleVersion(request, bc)
 	default:
