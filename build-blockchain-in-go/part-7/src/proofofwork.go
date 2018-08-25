@@ -82,7 +82,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 }
 
 // 校验工作量证明
-func (pow *ProofOfWork) Validata() bool {
+func (pow *ProofOfWork) Validate() bool {
 	var hashInt big.Int
 
 	data := pow.prepareData(pow.block.Nonce)
