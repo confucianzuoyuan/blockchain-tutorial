@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>reveal.js – The HTML Presentation Framework</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>第二章 比特币原理</h1>
+                </section>
+                
+                <section data-markdown>
+                    ## 交易，区块，挖矿和区块链
+                    - 比特币系统与传统的银行和支付系统不同，是基于去中心化的信任。
+                    - 在本章中，我们将通过较高层面跟踪比特币系统单笔交易，观察交易如何通过比特币分布式共识机制变得可信，被接受，并且最终记录在区块链，也就是所有交易的分布式账本。
+                </section>
+
+                <section data-markdown>
+                    ## 比特币概述
+                    - 用户：用户通过密钥控制钱包
+                    - 交易：每一笔交易都会被广播到整个比特币网络
+                    - 矿工：通过竞争计算生成在每个节点达成共识的区块链，区块链是一个分布式的公共权威账本，包含了比特币网络发生的所有交易。
+                </section>
+
+                <section data-markdown>
+                    ## 区块链数据查询网站
+                    - [Bitcoin Block Explorer](https://blockexplorer.com/)
+                    - [BlockCypher Explorer](https://live.blockcypher.com/)
+                    - [blockchain.info](https://www.blockchain.com/explorer)
+                    - [BitPay Insight](https://insight.bitpay.com/)
+                </section>
+
+                <section data-markdown>
+                    ## 区块链数据查询网站
+                    - 以上每一个查询网站都有搜索功能，可以通过地址，交易哈希值或区块号，搜索到在比特币网络和区块链中对应的数据。
+                </section>
+
+                <section data-markdown>
+                    ## 支付请求二维码
+                    - [支付请求二维码](./images/qrcode.png)
+                    - 尝试用你的钱包扫描这个，看看地址和金额，但不要发送货币。
+                    - [交易链接](https://blockexplorer.com/tx/0627052b6f28912f2703066a912ea577f2ce4da4caa5a5fbd8a57286c345c2f2)
+                    - 从千分之一比特币(1毫比特币）到一亿分之一比特币（1聪比特币），比特币网络可以处理任意小额交易。
+                </section>
+
+                <section data-markdown>
+                    ## 比特币交易
+                    - 交易告知全网: 比特币的持有者已授权把比特币转帐给其他人。
+                    - 新持有者能够再次授权，转移给该比特币所有权链中的其他人，产生另一笔交易来花掉这些比特币，
+                </section>
+
+                <section data-markdown>
+                    ## 交易的输入与输出
+                    - 交易就像复式记账法账簿中的行。
+                    - 每一笔交易包含一个或多个“输入”。输入的所有权证明，以所有者的数字签名形式存在，并可以被任何人独立验证。
+                    - 有一个或多个“输出”。
+                    - 输入和输出的总额不需要相等。
+                    - 当输出累加略少于输入量，两者的差额就代表了一笔隐含的“矿工费”。
+                    - 矿工费也是将交易放进账簿的矿工所收集到的一笔小额支付。
+                    - [示意图](./images/transaction.png)
+                </section>
+
+                <section data-markdown>
+                    ## 交易链
+                    - [示意图](./images/transaction1.png)
+                    - 交易链中，一笔交易输出就是另一笔交易的输入
+                    - Alice的密钥提供了解锁之前交易输出的签名，因此向比特币网络证明她拥有这笔钱。
+                    - 她将买咖啡的这笔支付附加到Bob的地址上，明确指明要求是Bob签名才能消费这笔钱。
+                </section>
+
+                <section data-markdown>
+                    ## 找零
+                    - 如果购买了一个价格为5比特币但只能使用20比特币输入的商品，那么可以将5个比特币的一个输出发送给商店所有者，并将一个15比特币的输出返回给自己作为找零（减去交易费用）。
+                    - 找零地址不必与输入时提供的地址相同，出于隐私的原因，通常是所有者钱包中的新地址。
+                    - 不同的钱包可以在汇总输入以进行用户请求的付款时使用不同的策略。它们可能会聚合许多小输入，或者使用等于或大于所需付款的输入。
+                    - 总的来讲，交易是将钱从交易输入移至输出。输入是指比特币的来源，通常是之前一笔交易的输出。
+                </section>
+
+                <section data-markdown>
+                    ## 常见的交易形式
+                    - [最普通的交易](./images/commontx.png)
+                    - [打包资金的交易](./images/aggrtx.png)
+                    - [分散资金的交易](./images/distx.png)
+                </section>
+
+                <section data-markdown>
+                    ## 交易的构建
+                    - Alice的钱包应用知道如何选取合适的输入和输出以建立Alice所希望的交易。
+                    - Alice只需要指定目标地址和金额，其余的细节钱包应用会在后台自动完成。
+                    - 钱包应用可以在完全离线时建立交易。
+                    - 就像在家里写张支票， 之后放到信封发给银行一样。
+                    - 比特币交易建立和签名时不用连接比特币网络。
+                    - 只有在执行交易时才需要将交易发送到网络。
+                </section>
+
+                <section data-markdown>
+                    ## 获取正确的输入
+                    - Alice的钱包应用首先要找到一些足够支付给Bob所需金额的输入。
+                    - 钱包应用跟踪着钱包中某个地址的所有可用输出。
+                    - 完整客户端含有整个区块链中所有交易的所有未消费输出副本。
+                    - 完整客户端占太大的硬盘空间，所以大多数钱包使用轻量级的客户端，只保存用户自己的未消费输出。
+                </section>
+
+                <section data-markdown>
+                    ## 查找Alice的比特币地址所有的未消费的输出
+                    ```sh
+                    $ curl https://blockchain.info/unspent?active=1Cdid9KFAaatwczBwBttQcwXYCpvK8h7FK
+                    {
+                    
+                        "unspent_outputs":[
+                    
+                            {
+                                "tx_hash":"186f9f998a5...2836dd734d2804fe65fa35779",
+                                "tx_index":104810202,
+                                "tx_output_n": 0,
+                                "script":"76a9147f9b1a7fb68d60c536c2fd8aeaa53a8f3cc025a888ac",
+                                "value": 10000000,
+                                "value_hex": "00989680",
+                                "confirmations":0
+                            }
+                            ... 
+                        ]
+                    }
+                    ```
+                </section>
+
+                <section data-markdown>
+                    [点击这里 查看Joe和Alice间的交易信息](http://bit.ly/1tAeeGr)
+                </section>
+
+                <section data-markdown>
+                    ## 创建交易输出
+                    - 交易的输出会被创建成为一个包含这笔数额的脚本的形式，只能被引入这个脚本的一个解答后才能兑换。
+                    - 简单点说就是，Alice的交易输出会包含一个脚本，这个脚本说“这个输出谁能拿出一个签名和Bob的公开地址匹配上，就支付给谁”。
+                    - 因为只有Bob的钱包的私钥可以匹配这个地址，所以只有Bob的钱包可以提供这个签名以兑换这笔输出。
+                    - 因此Alice包装的输出需要Bob的签名来解锁。
+                </section>
+
+                <section data-markdown>
+                    ## 创建交易输出
+                    - 交易还会包含第二个输出
+                    - Alice的金额是0.10比特币的输出。
+                    - 0.015比特币一杯咖啡。
+                    - 需要找Alice 0.085比特币的零钱。
+                    - Alice钱包创建给她的找零输出就在付给Bob的同一个交易里面。
+                    - Alice的钱包将她的金额分成了两个支付：一个给Bob，一个给自己。
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/search/search.js', async: true },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
