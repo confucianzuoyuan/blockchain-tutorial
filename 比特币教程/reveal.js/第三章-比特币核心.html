@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>reveal.js – The HTML Presentation Framework</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section data-markdown>
+					# 第一章 比特币介绍
+				</section>
+
+                <section data-markdown>
+                    ## 概述
+                    - Bitcoin是一个开源项目，源代码可以根据开放（MIT）许可证提供，可免费下载并用于任何目的。
+                    - 比特币是由一个开放的志愿者社区开发的。
+                    - 起初社区只有中本聪。到2016年，比特币的源代码有超过400个贡献者，大约十几位开发人员几乎全职工作，几十名开发人员兼职。任何人都可以贡献代码。
+                </section>
+
+                <section data-markdown>
+                    ## 概述
+                    - 中本聪先写好比特币客户端(使用C++编写)，然后再写的比特币白皮书。
+                    - 中本聪的第一个实现，就是“比特币核心”或者叫做“中本聪客户端”。
+                    - 后来迭代了很多版。
+                    - Bitcoin Core实现了比特币的所有方面，包括钱包，交易和区块验证引擎，以及P2P网络中的完整网络节点。
+                </section>
+
+                <section data-markdown>
+                    (比特币核心架构图)[./images/bitcoin.png]
+                </section>
+
+                <section data-markdown>
+                    ## 从源码编译比特币核心
+                    ```sh
+                    $ git clone https://github.com/bitcoin/bitcoin.git
+                    Cloning into 'bitcoin'...
+                    remote: Counting objects: 66193, done.
+                    remote: Total 66193 (delta 0), reused 0 (delta 0), pack-reused 66193
+                    Receiving objects: 100% (66193/66193), 63.39 MiB | 574.00 KiB/s, done.
+                    Resolving deltas: 100% (48395/48395), done.
+                    Checking connectivity... done.
+                    $ cd bitcoin
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 查看版本号
+                    ```
+                    $ git tag
+                    v0.1.5
+                    v0.1.6test1
+                    v0.10.0
+                    ...
+                    v0.11.2
+                    v0.11.2rc1
+                    v0.12.0rc1
+                    v0.12.0rc2
+                    ...
+                    $ git checkout v0.11.2
+                    HEAD is now at 7e27892... Merge pull request #6975
+                    $ git status
+                    HEAD detached at v0.11.2
+                    nothing to commit, working directory clean
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 将bitcoin build起来
+                    ```
+                    ./autogen.sh
+                    ./configure
+                    make
+                    ```
+                </section>
+
+                <section data-markdown>
+                    - autogen.sh脚本创建一组自动配置脚本，它会询问系统以发现正确的设置，并确保你拥有编译代码所需的所有库。
+                    - ./configure运行configure脚本来自动发现所有必需的库，并为系统创建一个自定义的构建脚本。
+                    - 如果一切顺利，configure命令将会以创建可定制的构建脚本结束。
+                    - 输入make命令就可以开始编译了。
+                </section>
+
+                <section data-markdown>
+                    - 编译完成后，运行`sudo make install`来安装bitcoind可执行程序。
+                    - 运行`which bitcoind`和`which bitcoin-cli`检查一下安装情况。
+                </section>
+
+                <section data-markdown>
+                    ## configure配置项说明
+                    - --help: 帮助文档
+                    - --prefix=$HOME: 这将覆盖生成的可执行文件的默认安装位置
+                    - --disable-wallet: 禁用参考钱包的实现
+                    - --with-incompatible-bdb: 如果正在构建钱包，允许使用不兼容版本的Berkeley DB库。
+                    - --with-gui=no: 不要构建图形用户界面，图形界面需要Qt库。只构建服务器和命令行。
+                </section>
+
+                <section data-markdown>
+                    ## 运行比特币核心节点
+                    - 比特币的P2P网络由网络“节点”组成，主要由志愿者和一些构建比特币应用程序的商业机构运行。
+                    - 运行的比特币节点具有所有交易的本地副本，由其自己的系统独立验证。 
+                    - 通过运行节点，不必依赖任何第三方来验证交易。
+                    - 通过运行比特币节点，可以为比特币网络做出贡献。(节点越多，越分布式)
+                </section>
+
+                <section data-markdown>
+                    ## 运行比特币核心节点
+                    - 运行节点需要一个具有足够资源来处理所有比特币交易的永久连接的系统。
+                    - 根据你是否选择索引所有交易并保留区块的完整副本，你可能还需要大量的磁盘空间和RAM。
+                    - 到2016年底，全索引节点需要2GB的RAM和125GB的磁盘空间。
+                    - 比特币节点还传输和接收比特币交易和区块，消耗互联网带宽。
+                    - 建议不要在其上运行比特币全节点，或以限制其带宽的方式运行它。
+                </section>
+
+                <section data-markdown>
+                    ## 运行比特币核心节点
+                    - Bitcoin Core默认情况下保留区块链的完整副本，与2009年成立以来在比特币网络上发生的每一笔交易相关。
+                    - 完整的区块链数据集被下载完成之前，Bitcoin Core将无法处理交易或更新帐户余额。
+                    - 可以配置Bitcoin Core通过丢弃旧区块来减少区块链的大小，但是在丢弃数据之前仍将下载整个数据集。
+                </section>
+
+                <section data-markdown>
+                    ## 首次运行比特币核心节点
+                    - 当你第一次运行bitcoind时，它会提醒你用一个安全密码给JSON-RPC接口创建一个配置文件。
+                    - 该密码控制对Bitcoin Core提供的API的访问权限。
+                    ```sh
+                    $ bitcoind
+                    Error: To use the "-server" option, you must set a rpcpassword in the configuration file:
+                    /home/ubuntu/.bitcoin/bitcoin.conf
+                    It is recommended you use the following random password:
+                    rpcuser=bitcoinrpc
+                    rpcpassword=2XA4DuKNCbtZXsBQRRNDEwEY2nM6M4H9Tx5dFjoAVVbK
+                    (you do not need to remember this password)
+                    The username and password MUST NOT be the same.
+                    If the file does not exist, create it with owner-readable-only file permissions.
+                    It is also recommended to set alertnotify so you are notified of problems;
+                    for example: alertnotify=echo %s | mail -s "Bitcoin Alert" admin@foo.com
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 配置文件
+                    - 在首选编辑器中编辑配置文件，并设置参数，用bitcoind推荐的强密码替换密码。
+                    - 在.bitcoin目录（在用户的主目录下）中创建一个文件，以便它被命名为.bitcoin/bitcoin.conf并提供用户名和密码：
+                    ```
+                    rpcuser=bitcoinrpc
+                    rpcpassword=CHANGE_THIS
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 查看配置项
+                    - `bitcoind --help`
+                </section>
+
+                <section data-markdown>
+                    ## 配置项说明
+                    - alertnotify: 运行指定的命令或脚本，通常通过电子邮件将紧急警报发送给该节点的所有者。
+                    - conf: 配置文件的另一个位置。这只是作为bitcoind的命令行参数有意义，因为它不能在它引用的配置文件内。
+                    - datadir: 选择要放入所有块链数据的目录和文件系统。默认情况下，这是主目录的.bitcoin子目录。确保这个文件系统具有几GB的可用空间。
+                </section>
+
+                <section data-markdown>
+                    ## 配置项说明
+                    - prune: 通过删除旧的块，将磁盘空间要求降低到这个兆字节。在资源受限的节点上不能满足完整块的节点使用这个。
+                    - txindex: 维护所有交易的索引。这意味着可以通过ID以编程方式检索任何交易的块链的完整副本。
+                    - maxconnections: 设置接受连接的最大节点数。 从默认值减少该值将减少您的带宽消耗。 如果您的网络是按照流量计费，请使用。
+                </section>
+
+                <section data-markdown>
+                    ## 配置项说明
+                    - maxmempool: 将交易内存池限制在几兆字节。使用它来减少节点的内存使用。
+                    - maxreceivebuffer/maxsendbuffer: 将每连接内存缓冲区限制为1000字节的多个倍数。在内存受限节点上使用。
+                    - minrelaytxfee: 设置您将继续的最低费用交易。低于此值，交易被视为零费用。在内存受限的节点上使用它来减少内存中交易池的大小。
+                </section>
+
+                <section data-markdown>
+                    ## 完整节点配置示例
+                    ```
+                    alertnotify=myemailscript.sh "Alert: %s"
+                    datadir=/lotsofspace/bitcoin
+                    txindex=1
+                    rpcuser=bitcoinrpc
+                    rpcpassword=CHANGE_THIS
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 低配置节点配置示例
+                    ```
+                    alertnotify=myemailscript.sh "Alert: %s"
+                    maxconnections=15
+                    prune=5000
+                    minrelaytxfee=0.0001
+                    maxmempool=200
+                    maxreceivebuffer=2500
+                    maxsendbuffer=500
+                    rpcuser=bitcoinrpc
+                    rpcpassword=CHANGE_THIS
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 将配置输出到控制台
+                    ```
+                    $ bitcoind -printtoconsole
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 获取节点运行状态
+                    ```
+                    $ bitcoin-cli getinfo
+                    {
+                        "version" : 110200,
+                        "protocolversion" : 70002,
+                        "blocks" : 396328,
+                        "timeoffset" : 0,
+                        "connections" : 15,
+                        "proxy" : "",
+                        "difficulty" : 120033340651.23696899,
+                        "testnet" : false,
+                        "relayfee" : 0.00010000,
+                        "errors" : ""
+                    }
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 命令行调用json-rpc api
+                    ```
+                    $ bitcoin-cli getblockhash 1000
+                    00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09
+                    ```
+                    结果是一个区块哈希。该命令应该在你的系统上返回相同的结果，表明你的Bitcoin Core节点正在运行，并且返回关于块1000的信息。
+                </section>
+
+                <section data-markdown>
+                    ```
+                    $ bitcoin-cli getinfo
+                    {
+                        "version" : 110200,
+                        "protocolversion" : 70002,
+                        "blocks" : 396367,
+                        "timeoffset" : 0,
+                        "connections" : 15,
+                        "proxy" : "",
+                        "difficulty" : 120033340651.23696899,
+                        "testnet" : false,
+                        "relayfee" : 0.00010000,
+                        "errors" : ""
+                    }
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 命令getrawtransaction以十六进制返回交易
+                    ```
+                    $ bitcoin-cli getrawtransaction 0627052b6f28912f2703066a912ea577f2ce4da4caa5a↵
+                    5fbd8a57286c345c2f2
+                    
+                    0100000001186f9f998a5aa6f048e51dd8419a14d8a0f1a8a2836dd734d2804fe65fa35779000↵
+                    000008b483045022100884d142d86652a3f47ba4746ec719bbfbd040a570b1deccbb6498c75c4↵
+                    ae24cb02204b9f039ff08df09cbe9f6addac960298cad530a863ea8f53982c09db8f6e3813014↵
+                    10484ecc0d46f1918b30928fa0e4ed99f16a0fb4fde0735e7ade8416ab9fe423cc54123363767↵
+                    89d172787ec3457eee41c04f4938de5cc17b4a10fa336a8d752adfffffffff0260e3160000000↵
+                    0001976a914ab68025513c3dbd2f7b92a94e0581f5d50f654e788acd0ef8000000000001976a9↵
+                    147f9b1a7fb68d60c536c2fd8aeaa53a8f3cc025a888ac00000000
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 使用decodeawtransaction命令解码
+                    ```
+                    $ bitcoin-cli decoderawtransaction 0100000001186f9f998a5aa6f048e51dd8419a14d8↵
+                    a0f1a8a2836dd734d2804fe65fa35779000000008b483045022100884d142d86652a3f47ba474↵
+                    6ec719bbfbd040a570b1deccbb6498c75c4ae24cb02204b9f039ff08df09cbe9f6addac960298↵
+                    cad530a863ea8f53982c09db8f6e381301410484ecc0d46f1918b30928fa0e4ed99f16a0fb4fd↵
+                    e0735e7ade8416ab9fe423cc5412336376789d172787ec3457eee41c04f4938de5cc17b4a10fa↵
+                    336a8d752adfffffffff0260e31600000000001976a914ab68025513c3dbd2f7b92a94e0581f5↵
+                    d50f654e788acd0ef8000000000001976a9147f9b1a7fb68d60c536c2fd8aeaa53a8f3cc025a8↵
+                    88ac00000000
+                    {
+                        "txid": "0627052b6f28912f2703066a912ea577f2ce4da4caa5a5fbd8a57286c345c2f2",
+                        "size": 258,
+                        "version": 1,
+                        "locktime": 0,
+                        "vin": [
+                          {
+                            "txid": "7957a35fe64f80d234d76d83a2...8149a41d81de548f0a65a8a999f6f18",
+                            "vout": 0,
+                            "scriptSig": {
+                              "asm":"3045022100884d142d86652a3f47ba4746ec719bbfbd040a570b1decc...",
+                              "hex":"483045022100884d142d86652a3f47ba4746ec719bbfbd040a570b1de..."
+                            },
+                            "sequence": 4294967295
+                          }
+                        ],
+                        "vout": [
+                          {
+                            "value": 0.01500000,
+                            "n": 0,
+                            "scriptPubKey": {
+                              "asm": "OP_DUP OP_HASH160 ab68...5f654e7 OP_EQUALVERIFY OP_CHECKSIG",
+                              "hex": "76a914ab68025513c3dbd2f7b92a94e0581f5d50f654e788ac",
+                              "reqSigs": 1,
+                              "type": "pubkeyhash",
+                              "addresses": [
+                                "1GdK9UzpHBzqzX2A9JFP3Di4weBwqgmoQA"
+                              ]
+                            }
+                          },
+                          {
+                            "value": 0.08450000,
+                            "n": 1,
+                            "scriptPubKey": {
+                              "asm": "OP_DUP OP_HASH160 7f9b1a...025a8 OP_EQUALVERIFY OP_CHECKSIG",
+                              "hex": "76a9147f9b1a7fb68d60c536c2fd8aeaa53a8f3cc025a888ac",
+                              "reqSigs": 1,
+                              "type": "pubkeyhash",
+                              "addresses": [
+                                "1Cdid9KFAaatwczBwBttQcwXYCpvK8h7FK"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                      ```
+                </section>
+
+                <section data-markdown>
+                    ## 探索区块
+                    ```
+                    $ bitcoin-cli getblockhash 277316
+                    0000000000000001b6b9a13b095e96db41c4a928b97ef2d944a9b31b2cc7bdc4
+                    $ bitcoin-cli getblock 0000000000000001b6b9a13b095e96db41c4a928b97ef2d944a9b31b2cc7bdc4
+                    {
+                        "hash": "0000000000000001b6b9a13b095e96db41c4a928b97ef2d944a9b31b2cc7bdc4",
+                        "confirmations": 37371,
+                        "size": 218629,
+                        "height": 277316,
+                        "version": 2,
+                        "merkleroot": "c91c008c26e50763e9f548bb8b2fc323735f73577effbc55502c51eb4cc7cf2e",
+                        "tx": [
+                          "d5ada064c6417ca25c4308bd158c34b77e1c0eca2a73cda16c737e7424afba2f",
+                          "b268b45c59b39d759614757718b9918caf0ba9d97c56f3b91956ff877c503fbe",
+                          "04905ff987ddd4cfe603b03cfb7ca50ee81d89d1f8f5f265c38f763eea4a21fd",
+                          "32467aab5d04f51940075055c2f20bbd1195727c961431bf0aff8443f9710f81",
+                          "561c5216944e21fa29dd12aaa1a45e3397f9c0d888359cb05e1f79fe73da37bd",
+                      [... hundreds of transactions ...]
+                          "78b300b2a1d2d9449b58db7bc71c3884d6e0579617e0da4991b9734cef7ab23a",
+                          "6c87130ec283ab4c2c493b190c20de4b28ff3caf72d16ffa1ce3e96f2069aca9",
+                          "6f423dbc3636ef193fd8898dfdf7621dcade1bbe509e963ffbff91f696d81a62",
+                          "802ba8b2adabc5796a9471f25b02ae6aeee2439c679a5c33c4bbcee97e081196",
+                          "eaaf6a048588d9ad4d1c092539bd571dd8af30635c152a3b0e8b611e67d1a1af",
+                          "e67abc6bd5e2cac169821afc51b207127f42b92a841e976f9b752157879ba8bd",
+                          "d38985a6a1bfd35037cb7776b2dc86797abbb7a06630f5d03df2785d50d5a2ac",
+                          "45ea0a3f6016d2bb90ab92c34a7aac9767671a8a84b9bcce6c019e60197c134b",
+                          "c098445d748ced5f178ef2ff96f2758cbec9eb32cb0fc65db313bcac1d3bc98f"
+                        ],
+                        "time": 1388185914,
+                        "mediantime": 1388183675,
+                        "nonce": 924591752,
+                        "bits": "1903a30c",
+                        "difficulty": 1180923195.258026,
+                        "chainwork": "000000000000000000000000000000000000000000000934695e92aaf53afa1a",
+                        "previousblockhash": "0000000000000002a7bbd25a417c0374cc55261021e8a9ca74442b01284f0569",
+                        "nextblockhash": "000000000000000010236c269dd6ed714dd5db39d36b33959079d78dfd431ba7"
+                    }
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## python脚本调用getinfo
+                    `rpc_example.py`
+
+                    ```
+                    from bitcoin.rpc import RawProxy
+
+                    # Create a connection to local Bitcoin Core node
+                    p = RawProxy()
+                    
+                    # Run the getblockchaininfo command, store the resulting data in info
+                    info = p.getblockchaininfo()
+                    
+                    # Retrieve the 'blocks' element from the info
+                    print(info['blocks'])
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ```
+                    $ python rpc_example.py
+                    394075
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 获取交易信息
+                    ```
+                    from bitcoin.rpc import RawProxy
+
+                    p = RawProxy()
+                    
+                    # Alice's transaction ID
+                    txid = "0627052b6f28912f2703066a912ea577f2ce4da4caa5a5fbd8a57286c345c2f2"
+                    
+                    # First, retrieve the raw transaction in hex
+                    raw_tx = p.getrawtransaction(txid)
+                    
+                    # Decode the transaction hex into a JSON object
+                    decoded_tx = p.decoderawtransaction(raw_tx)
+                    
+                    # Retrieve each of the outputs from the transaction
+                    for output in decoded_tx['vout']:
+                        print(output['scriptPubKey']['addresses'], output['value'])
+                    ```
+                </section>
+
+                <section data-markdown>
+                    ## 获取区块信息
+                    ```
+                    from bitcoin.rpc import RawProxy
+
+                    p = RawProxy()
+                    
+                    # The block height where Alice's transaction was recorded
+                    blockheight = 277316
+                    
+                    # Get the block hash of block with height 277316
+                    blockhash = p.getblockhash(blockheight)
+                    
+                    # Retrieve the block by its hash
+                    block = p.getblock(blockhash)
+                    
+                    # Element tx contains the list of all transaction IDs in the block
+                    transactions = block['tx']
+                    
+                    block_value = 0
+                    
+                    # Iterate through each transaction ID in the block
+                    for txid in transactions:
+                        tx_value = 0
+                        # Retrieve the raw transaction by ID
+                        raw_tx = p.getrawtransaction(txid)
+                        # Decode the transaction
+                        decoded_tx = p.decoderawtransaction(raw_tx)
+                        # Iterate through each output in the transaction
+                        for output in decoded_tx['vout']:
+                            # Add up the value of each output
+                            tx_value = tx_value + output['value']
+                    
+                        # Add the value of this transaction to the total
+                        block_value = block_value + tx_value
+                    
+                    print("Total value in block: ", block_value)
+                    ```
+                </section>
+
+                <section data-markdown>
+                    其他客户端、工具包
+                </section>
+
+                <section data-markdown>
+                    ## C/C++
+                    - Bitcoin Core: The reference implementation of bitcoin
+                    - libbitcoin: Cross-platform C++ development toolkit, node, and consensus library
+                    - bitcoin explorer: Libbitcoin’s command-line tool
+                    - picocoin: A C language lightweight client library for bitcoin by Jeff Garzik
+                </section>
+
+                <section data-markdown>
+                    ## JavaScript
+                    - bcoin: A modular and scalable full-node implementation with API
+                    - Bitcore: Full node, API, and library by Bitpay
+                    - BitcoinJS: A pure JavaScript Bitcoin library for node.js and browsers
+                </section>
+
+                <section data-markdown>
+                    ## Go
+                    - btcd: A Go language full-node bitcoin client
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/search/search.js', async: true },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
