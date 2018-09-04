@@ -357,6 +357,165 @@
 					- 由公钥生成比特币地址时使用的算法是SHA和RIPEMD，具体地说是SHA256和RIPEMD160。
 				</section>
 
+				<section data-markdown>
+					## 比特币地址
+					- 以公钥 K 为输入，计算其SHA256哈希值，并以此结果计算RIPEMD160哈希值，得到一个长度为160位（20字节）的数字：
+					- A = RIPEMD160(SHA256(K))
+					- 公式中，K是公钥，A是生成的比特币地址。
+					- 比特币地址与公钥不同。比特币地址是由公钥经过单向的哈希函数生成的。
+				</section>
+
+				<section data-markdown>
+					## 比特币地址
+					- 通常用户见到的比特币地址是经过“Base58Check”编码的，这种编码使用了58个字符和校验码。
+					- 提高了可读性、避免歧义并有效防止了在地址转录和输入中产生的错误。
+					- Base58Check编码也被用于比特币的其它地方，例如比特币地址、私钥、加密的密钥和脚本哈希中，用来提高可读性和录入的正确性。
+				</section>
+
+				<section data-markdown>
+					## 下图描述了如何从公钥生成比特币地址。
+					(公钥生成比特币地址)[./images/dizhi.png]
+				</section>
+
+				<section data-markdown>
+					## Base58和Base58Check编码
+					- 为了更简洁方便地表示长串的数字，使用更少的符号，许多计算机系统会使用一种以数字和字母组成的大于十进制的表示法。
+					- 例如，传统的十进制计数系统使用0-9十个数字，而十六进制系统使用了额外的A-F六个字母。
+					- 一个同样的数字，它的十六进制表示就会比十进制表示更短。
+					- Base64使用了26个小写字母、26个大写字母、10个数字以及两个符号（例 如“+”和“/”），用于在电子邮件这样的基于文本的媒介中传输二进制数据。
+					- Base64通常用于编码邮件中的附件。
+				</section>
+
+				<section data-markdown>
+					## Base58和Base58Check编码
+					- Base58是一种基于文本的二进制编码格式，用在比特币和其它的加密货币中。
+					- 这种编码格式不仅实现了数据压缩，保持了易读性，还具有错误诊断功能。
+					- Base58是Base64编码格式的子集，同样使用大小写字母和10个数字，但舍弃了一些容易错读和在特定字体中容易混淆的字符。
+					- 具体地，Base58不含Base64中的0（数字0）、O（大写字母o）、l（小写字母 L）、I（大写字母i），以及“+”和“/”两个字符。
+					- 简而言之，Base58就是由不包括（0，O，l，I）的大小写字母和数字组成。
+				</section>
+
+				<section data-markdown>
+					## 比特币的Base58字母表
+					`123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`
+				</section>
+
+				<section data-markdown>
+					## 继续
+					- 为了增加防止打印和转录错误的安全性，Base58Check是一种常用在比特币中的Base58编码格式，比特币有内置的检查错误的编码。
+					- 检验和是添加到正在编码的数据末端的额外4个字节。
+					- 校验和是从编码的数据的哈希值中得到的，所以可以用来检测并避免转录和输入中产生的错误。
+				</section>
+
+				<section data-markdown>
+					## 继续
+					- 使用Base58check编码时，解码软件会计算数据的校验和并和编码中自带的校验和进行对比。
+					- 二者不匹配则表明有错误产生，那么这个Base58Check的数据就是无效的。
+					- 一个错误比特币地址就不会被钱包软件认为是有效的地址，否则这种错误会造成资金的丢失。
+				</section>
+
+				<section data-markdown>
+					## 继续
+					- 为了将数据（数字）转换成Base58Check格式，首先我们要对数据添加一个称作“版本字节”的前缀，这个前缀用来识别编码的数据的类型。
+					- 例如，比特币地址的前缀是0（十六进制是0x00），而对私钥编码时前缀是128（十六进制是0x80）。
+				</section>
+
+				<section data-markdown>
+					## 继续
+					(前缀)[./images/qianzhui.png]
+				</section>
+
+				<section data-markdown>
+					## “双哈希”校验和
+					- `checksum = SHA256(SHA256(prefix+data))`
+					- 在产生的长32个字节的哈希值（两次哈希运算）中，我们只取前4个字节。这4个字节就作为检验错误的代码或者校验和。校验码会添加到数据之后。
+					- 结果由三部分组成：前缀、数据和校验和。这个结果采用之前描述的Base58字母表编码。
+				</section>
+
+				<section data-markdown>
+					## 编码过程示意图
+					(编码过程示意图)[./images/bianmaguocheng.png]
+				</section>
+
+				<section data-markdown>
+					## 继续
+					- 在比特币中，大多数需要向用户展示的数据都使用Base58Check编码，可以实现数据压缩，易读而且有错误检验。
+					- Base58Check编码中的版本前缀是用来创造易于辨别的格式，在Base58里的格式在Base58Check编码的有效载荷的开始包含了明确的属性。
+					- 这些属性使用户可以轻松明确被编码的数据的类型以及如何使用它们。
+					- 例如我们可以看到他们的不同，Base58Check编码的比特币地址是以1开头的，而Base58Check编码的私钥WIF是以5开头的。
+				</section>
+
+				<section data-markdown>
+					## 继续
+					- 我们回顾比特币地址产生的完整过程，从私钥、到公钥（椭圆曲线上某个点）、再到两次哈希的地址，到最终的Base58Check编码。
+					- C++代码完整详细的展示了从私钥到Base58Check编码后的比特币地址的步骤。
+					- 代码中使用libbitcoin library来实现某些辅助功能。
+				</section>
+
+				<section data-markdown>
+					## 继续
+					```cpp
+					#include <bitcoin/bitcoin.hpp>
+
+					int main()
+					{
+						// Private secret key string as base16
+						bc::ec_secret decoded;
+						bc::decode_base16(decoded,
+							"038109007313a5807b2eccc082c8c3fbb988a973cacf1a7df9ce725c31b14776");
+					
+						bc::wallet::ec_private secret(
+							decoded, bc::wallet::ec_private::mainnet_p2kh);
+					
+						// Get public key.
+						bc::wallet::ec_public public_key(secret);
+						std::cout << "Public key: " << public_key.encoded() << std::endl;
+					
+						// Create Bitcoin address.
+						// Normally you can use:
+						//    bc::wallet::payment_address payaddr =
+						//        public_key.to_payment_address(
+						//            bc::wallet::ec_public::mainnet_p2kh);
+						//  const std::string address = payaddr.encoded();
+					
+						// Compute hash of public key for P2PKH address.
+						bc::data_chunk public_key_data;
+						public_key.to_data(public_key_data);
+						const auto hash = bc::bitcoin_short_hash(public_key_data);
+					
+						bc::data_chunk unencoded_address;
+						// Reserve 25 bytes
+						//   [ version:1  ]
+						//   [ hash:20    ]
+						//   [ checksum:4 ]
+						unencoded_address.reserve(25);
+						// Version byte, 0 is normal BTC address (P2PKH).
+						unencoded_address.push_back(0);
+						// Hash data
+						bc::extend_data(unencoded_address, hash);
+						// Checksum is computed by hashing data, and adding 4 bytes from hash.
+						bc::append_checksum(unencoded_address);
+						// Finally we must encode the result in Bitcoin's base58 encoding.
+						assert(unencoded_address.size() == 25);
+						const std::string address = bc::encode_base58(unencoded_address);
+					
+						std::cout << "Address: " << address << std::endl;
+						return 0;
+					}
+					```	
+				</section>
+
+				<section data-markdown>
+					## 编译(代码使用预定义的私钥在每次运行时产生相同的比特币地址)
+					```
+					# Compile the addr.cpp code
+					$ g++ -o addr addr.cpp $(pkg-config --cflags --libs libbitcoin)
+					# Run the addr executable
+					$ ./addr
+					Public key: 0202a406624211f2abbdc68da3df929f938c3399dd79fac1b51b0e4ad1d26a47aa Address: 1PRTTaJesdNovgne6Ehcdu1fpEdX7913CK
+					```
+				</section>
+
 			</div>
 
 		</div>
