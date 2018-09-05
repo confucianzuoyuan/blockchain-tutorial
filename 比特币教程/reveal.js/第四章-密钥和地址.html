@@ -516,6 +516,121 @@
 					```
 				</section>
 
+				<section data-markdown>
+					## 密钥的格式
+					- 公钥和私钥的都可以有多种格式。一个密钥被不同的格式编码后，虽然结果看起来可能不同，但是密钥所编码数字并没有改变。
+					- 这些不同的编码格式主要是用来方便人们无误地使用和识别密钥。
+				</section>
+
+				<section data-markdown>
+					## 私钥的格式
+					- 私钥可以以许多不同的格式表示，所有这些都对应于相同的256位的数字。
+					- 下图展示了私钥的三种常见格式。不同的格式用在不同的场景下。十六进制和原始的二进制格式用在软件的内部，很少展示给用户看。
+					- WIF格式用在钱包之间密钥的输入和输出，也用于代表私钥的二维码（条形码）。
+					- [示意图](./images/siyaogeshi.png)
+					- [私钥相同](./images/siyaoxiangtong.png)
+				</section>
+
+				<section data-markdown>
+					## 私钥的格式
+					- 这些表示法都是用来表示相同的数字、相同的私钥的不同方法。
+					- 虽然编码后的字符串看起来不同，但不同的格式彼此之间可以很容易地相互转换。
+					- 请注意，“raw binary”未显示在表中，根据定义此处显示的任何编码的格式，不是raw binary数据。
+				</section>
+
+				<section data-markdown>
+					## 例子
+					```
+					$ bx wif-to-ec 5J3mBbAH58CpQ3Y5RNJpUKPE62SQ5tfcvU2JpbnkeyhfsYB1Jcn
+					1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd
+					$ bx wif-to-ec KxFC1jmwwCoACiCAWZ3eXa96mBM6tb3TYzGmf6YwgdGWZgawvrtJ
+					1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd
+					```
+				</section>
+
+				<section data-markdown>
+					## 安装两个命令行工具
+					```
+					$ brew install libbitcoin
+					$ brew install bx
+					```
+				</section>
+
+				<section data-markdown>
+					## 从Base58Check解码
+					- Bitcoin Explorer命令使得编写shell脚本和命令行“管道”变得容易，这些方式可以处理比特币密钥，地址和交易。
+					- 可以使用Bitcoin Explorer在命令行上解码Base58Check格式。
+					- 结果包含密钥作为有效载荷，WIF版本前缀128和校验和。
+					- 请注意，压缩密钥的“有效负载”附加了后缀01，表示导出的公钥要压缩。
+				</section>
+
+				<section data-markdown>
+					```
+					$ bx base58check-decode 5J3mBbAH58CpQ3Y5RNJpUKPE62SQ5tfcvU2JpbnkeyhfsYB1Jcn
+					{
+					checksum 4286807748
+					payload 1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd
+					version 128
+					}
+					```
+				</section>
+
+				<section data-markdown>
+					## 将十六进制转换为Base58Check编码
+					- 要转换成Base58Check（与上一个命令相反），我们使用Bitcoin Explorer的base58check-encode命令，并提供十六进制私钥，其次是WIF版本前缀128。
+					```
+					$ bx base58check-encode 1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd --version 128
+					5J3mBbAH58CpQ3Y5RNJpUKPE62SQ5tfcvU2JpbnkeyhfsYB1Jcn
+					```
+				</section>
+
+				<section data-markdown>
+					## 将十六进制（压缩格式密钥）转换为Base58Check编码
+					- 要将压缩格式的私钥编码为Base58Check，我们需在十六进制私钥的后面添加后缀01，然后使用跟上面一样的方法：
+					- 生成的WIF压缩格式的私钥以字母“K”开头，用以表明被编码的私钥有一个后缀“01”，且该私钥只能被用于生成压缩格式的公钥。
+					```
+					$ bx base58check-encode 1e99423a4ed27608a15a2616a2b0e9e52ced330ac530edcc32c8ffc6a526aedd01 --version 128
+					KxFC1jmwwCoACiCAWZ3eXa96mBM6tb3TYzGmf6YwgdGWZgawvrtJ
+					```
+				</section>
+
+				<section data-markdown>
+					## 公钥的格式	
+					- 公钥也可以用多种不同格式来表示，最重要的是它们分为非压缩格式或压缩格式公钥这两种形式。
+					- 公钥是在椭圆曲线上的一个点，由一对坐标（x，y）组成。
+					- 公钥通常表示为前缀04紧接着两个256比特的数字。
+					- 其中一个256比特数字是公钥的x坐标，另一个256比特数字是y坐标。
+					- 前缀04是用来区分非压缩格式公钥，压缩格式公钥是以02或者03开头。
+				</section>
+
+				<section data-markdown>
+					## 公钥的格式
+					- 下面是由前文中的私钥所生成的公钥，其坐标x和y如下：
+					- `x = F028892BAD7ED57D2FB57BF33081D5CFCF6F9ED3D3D7F159C2E2FFF579DC341A`
+					- `y = 07CF33DA18BD734C600B96A72BBC4749D5141C90EC8AC328AE52DDFE2E505BDB`
+				</section>
+
+				<section data-markdown>
+					## 公钥的格式
+					- 下面是同样的公钥以520比特的数字（130个十六进制数字）来表达。这个520比特的数字以前缀04开头，紧接着是x及y 坐标，组成格式为04 x y：
+					- `K = 04F028892BAD7ED57D2FB57BF33081D5CFCF6F9ED3D3D7F159C2E2FFF579DC341A07CF33DA18BD734C600B96A72BBC4749D5141C90EC8AC328AE 52DDFE2E505BDB`
+				</section>
+
+				<section data-markdown>
+					## 压缩格式公钥
+					- 引入压缩格式公钥是为了减少比特币交易的字节数，从而可以节省那些运行区块链数据库的节点磁盘空间。
+					- 大部分比特币交易包含了公钥，用于验证用户的凭据和支付比特币。
+					- 每个公钥有520比特（包括前缀，x坐标，y坐标）。如果每个区块有数百个交易，每天有成千上万的交易发生，区块链里就会被写入大量的数据。
+				</section>
+
+				<section data-markdown>
+					## 压缩格式公钥
+					- 一个公钥是一个椭圆曲线上的点(x, y)。而椭圆曲线实际是一个数学方程，曲线上的点实际是该方程的一个解。
+					- 因此，如果我们知道了公钥的x坐标，就可以通过解方程y^2 mod p = (x^3 + 7) mod p得到y坐标。
+					- 这种方案可以让我们只存储公钥的x坐标，略去y坐标，从而将公钥的大小和存储空间减少了256比特。
+					- 每个交易所需要的字节数减少了近一半，随着时间推移，就大大节省了很多数据传输和存储。
+				</section>
+
 			</div>
 
 		</div>
