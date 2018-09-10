@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// CLI responsible for processing command line arguments
 type CLI struct{}
 
 func (cli *CLI) createBlockchain(address string) {
@@ -46,6 +47,7 @@ func (cli *CLI) validateArgs() {
 }
 
 func (cli *CLI) printChain() {
+	// TODO: Fix this
 	bc := NewBlockchain("")
 	defer bc.db.Close()
 
@@ -54,7 +56,7 @@ func (cli *CLI) printChain() {
 	for {
 		block := bci.Next()
 
-		fmt.Printf("Prev hash: %x\n", block.PrevBlockHash)
+		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
 		fmt.Printf("Hash: %x\n", block.Hash)
 		pow := NewProofOfWork(block)
 		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
@@ -75,6 +77,7 @@ func (cli *CLI) send(from, to string, amount int) {
 	fmt.Println("Success!")
 }
 
+// Run parses command line arguments and processes commands
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
@@ -100,13 +103,13 @@ func (cli *CLI) Run() {
 		if err != nil {
 			log.Panic(err)
 		}
-	case "send":
-		err := sendCmd.Parse(os.Args[2:])
+	case "printchain":
+		err := printChainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
-	case "printchain":
-		err := printChainCmd.Parse(os.Args[2:])
+	case "send":
+		err := sendCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}

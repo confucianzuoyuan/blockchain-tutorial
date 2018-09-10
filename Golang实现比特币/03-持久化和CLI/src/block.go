@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Block keeps block headers
 type Block struct {
 	Timestamp     int64
 	Data          []byte
@@ -15,7 +16,7 @@ type Block struct {
 	Nonce         int
 }
 
-// 将 Block 序列化为一个字节数组
+// Serialize serializes the block
 func (b *Block) Serialize() []byte {
 	var result bytes.Buffer
 	encoder := gob.NewEncoder(&result)
@@ -28,7 +29,24 @@ func (b *Block) Serialize() []byte {
 	return result.Bytes()
 }
 
-// 将字节数组反序列化为一个 Block
+// NewBlock creates and returns Block
+func NewBlock(data string, prevBlockHash []byte) *Block {
+	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, 0}
+	pow := NewProofOfWork(block)
+	nonce, hash := pow.Run()
+
+	block.Hash = hash[:]
+	block.Nonce = nonce
+
+	return block
+}
+
+// NewGenesisBlock creates and returns genesis Block
+func NewGenesisBlock() *Block {
+	return NewBlock("Genesis Block", []byte{})
+}
+
+// DeserializeBlock deserializes a block
 func DeserializeBlock(d []byte) *Block {
 	var block Block
 
@@ -39,24 +57,4 @@ func DeserializeBlock(d []byte) *Block {
 	}
 
 	return &block
-}
-
-func NewBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{
-		Timestamp:     time.Now().Unix(),
-		Data:          []byte(data),
-		PrevBlockHash: prevBlockHash,
-		Hash:          []byte{},
-		Nonce:         0}
-	pow := NewProofOfWork(block)
-	nonce, hash := pow.Run()
-
-	block.Hash = hash[:]
-	block.Nonce = nonce
-
-	return block
-}
-
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", []byte{})
 }

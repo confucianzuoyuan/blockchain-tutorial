@@ -9,12 +9,12 @@ import (
 
 const utxoBucket = "chainstate"
 
-// 未消费的交易输出集合
+// UTXOSet represents UTXO set
 type UTXOSet struct {
 	Blockchain *Blockchain
 }
 
-// 找到未被消费的outputs
+// FindSpendableOutputs finds and returns unspent outputs to reference in inputs
 func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[string][]int) {
 	unspentOutputs := make(map[string][]int)
 	accumulated := 0
@@ -29,7 +29,6 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 			outs := DeserializeOutputs(v)
 
 			for outIdx, out := range outs.Outputs {
-				// 检验是否是正确的公钥地址
 				if out.IsLockedWithKey(pubkeyHash) && accumulated < amount {
 					accumulated += out.Value
 					unspentOutputs[txID] = append(unspentOutputs[txID], outIdx)
@@ -40,14 +39,14 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 		return nil
 	})
 	if err != nil {
-		log.Panic(nil)
+		log.Panic(err)
 	}
 
 	return accumulated, unspentOutputs
 }
 
-// 针对某一个公钥找出utxo
-func (u UTXOSet) FindUTXO(pubkeyHash []byte) []TXOutput {
+// FindUTXO finds UTXO for a public key hash
+func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TXOutput {
 	var UTXOs []TXOutput
 	db := u.Blockchain.db
 
@@ -59,7 +58,7 @@ func (u UTXOSet) FindUTXO(pubkeyHash []byte) []TXOutput {
 			outs := DeserializeOutputs(v)
 
 			for _, out := range outs.Outputs {
-				if out.IsLockedWithKey(pubkeyHash) {
+				if out.IsLockedWithKey(pubKeyHash) {
 					UTXOs = append(UTXOs, out)
 				}
 			}
@@ -74,8 +73,7 @@ func (u UTXOSet) FindUTXO(pubkeyHash []byte) []TXOutput {
 	return UTXOs
 }
 
-// UTXO set中未花费交易的数量
-// 每一笔交易应该最多只有一笔未花费输出(转给了自己，相当于找零)
+// CountTransactions returns the number of transactions in the UTXO set
 func (u UTXOSet) CountTransactions() int {
 	db := u.Blockchain.db
 	counter := 0
@@ -97,7 +95,7 @@ func (u UTXOSet) CountTransactions() int {
 	return counter
 }
 
-// 重建utxo集合
+// Reindex rebuilds the UTXO set
 func (u UTXOSet) Reindex() {
 	db := u.Blockchain.db
 	bucketName := []byte(utxoBucket)
@@ -140,7 +138,8 @@ func (u UTXOSet) Reindex() {
 	})
 }
 
-// 使用Block区块中的交易更新utxo集合
+// Update updates the UTXO set with transactions from the Block
+// The Block is considered to be the tip of a blockchain
 func (u UTXOSet) Update(block *Block) {
 	db := u.Blockchain.db
 
@@ -150,27 +149,28 @@ func (u UTXOSet) Update(block *Block) {
 		for _, tx := range block.Transactions {
 			if tx.IsCoinbase() == false {
 				for _, vin := range tx.Vin {
-					updateOuts := TXOutputs{}
+					updatedOuts := TXOutputs{}
 					outsBytes := b.Get(vin.Txid)
 					outs := DeserializeOutputs(outsBytes)
 
 					for outIdx, out := range outs.Outputs {
 						if outIdx != vin.Vout {
-							updateOuts.Outputs = append(updateOuts.Outputs, out)
+							updatedOuts.Outputs = append(updatedOuts.Outputs, out)
 						}
 					}
 
-					if len(updateOuts.Outputs) == 0 {
+					if len(updatedOuts.Outputs) == 0 {
 						err := b.Delete(vin.Txid)
 						if err != nil {
 							log.Panic(err)
 						}
 					} else {
-						err := b.Put(vin.Txid, updateOuts.Serialize())
+						err := b.Put(vin.Txid, updatedOuts.Serialize())
 						if err != nil {
 							log.Panic(err)
 						}
 					}
+
 				}
 			}
 

@@ -6,13 +6,13 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// 区块链迭代器，用来迭代boltDB存储的区块链。
+// BlockchainIterator is used to iterate over blockchain blocks
 type BlockchainIterator struct {
 	currentHash []byte
 	db          *bolt.DB
 }
 
-// 返回上一个区块
+// Next returns next block starting from the tip
 func (i *BlockchainIterator) Next() *Block {
 	var block *Block
 

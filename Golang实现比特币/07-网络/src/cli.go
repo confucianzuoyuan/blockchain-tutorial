@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+
 	"os"
 )
 
+// CLI responsible for processing command line arguments
 type CLI struct{}
 
 func (cli *CLI) printUsage() {
@@ -28,6 +30,7 @@ func (cli *CLI) validateArgs() {
 	}
 }
 
+// Run parses command line arguments and processes commands
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
@@ -47,7 +50,7 @@ func (cli *CLI) Run() {
 	startNodeCmd := flag.NewFlagSet("startnode", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
-	createBlockchainAddress := createWalletCmd.String("address", "", "The address to send genesis block reward to")
+	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	sendFrom := sendCmd.String("from", "", "Source wallet address")
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
@@ -61,37 +64,37 @@ func (cli *CLI) Run() {
 			log.Panic(err)
 		}
 	case "createblockchain":
-		err := createBlockchainCmd.Parse(os.Args[:2])
+		err := createBlockchainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "createwallet":
-		err := createWalletCmd.Parse(os.Args[:2])
+		err := createWalletCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "listaddresses":
-		err := listAddressesCmd.Parse(os.Args[:2])
+		err := listAddressesCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "printchain":
-		err := printChainCmd.Parse(os.Args[:2])
+		err := printChainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "reindexutxo":
-		err := reindexUTXOCmd.Parse(os.Args[:2])
+		err := reindexUTXOCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "send":
-		err := sendCmd.Parse(os.Args[:2])
+		err := sendCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "startnode":
-		err := startNodeCmd.Parse(os.Args[:2])
+		err := startNodeCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -112,9 +115,8 @@ func (cli *CLI) Run() {
 		if *createBlockchainAddress == "" {
 			createBlockchainCmd.Usage()
 			os.Exit(1)
-		} else {
-			cli.createBlockchain(*createBlockchainAddress, nodeID)
 		}
+		cli.createBlockchain(*createBlockchainAddress, nodeID)
 	}
 
 	if createWalletCmd.Parsed() {

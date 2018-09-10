@@ -8,19 +8,19 @@ import (
 	"math/big"
 )
 
-// 难度值，这里表示哈希的前 24 位必须是 0
+var (
+	maxNonce = math.MaxInt64
+)
+
 const targetBits = 24
 
-const maxNonce = math.MaxInt64
-
-// 每个块的工作量都必须要证明，所以有个指向 Block 的指针
-// target 是目标，我们最终要找的哈希必须要小于目标
+// ProofOfWork represents a proof-of-work
 type ProofOfWork struct {
 	block  *Block
 	target *big.Int
 }
 
-// target 等于 1 左移 256 - targetBits 位
+// NewProofOfWork builds and returns a ProofOfWork
 func NewProofOfWork(b *Block) *ProofOfWork {
 	target := big.NewInt(1)
 	target.Lsh(target, uint(256-targetBits))
@@ -30,7 +30,6 @@ func NewProofOfWork(b *Block) *ProofOfWork {
 	return pow
 }
 
-// 工作量证明用到的数据有：PrevBlockHash, Data, Timestamp, targetBits, nonce
 func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
@@ -46,7 +45,7 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	return data
 }
 
-// 工作量证明的核心就是寻找有效哈希
+// Run performs a proof-of-work
 func (pow *ProofOfWork) Run() (int, []byte) {
 	var hashInt big.Int
 	var hash [32]byte
@@ -57,10 +56,10 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 		data := pow.prepareData(nonce)
 
 		hash = sha256.Sum256(data)
+		fmt.Printf("\r%x", hash)
 		hashInt.SetBytes(hash[:])
 
 		if hashInt.Cmp(pow.target) == -1 {
-			fmt.Printf("\r%x", hash)
 			break
 		} else {
 			nonce++
@@ -71,7 +70,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 	return nonce, hash[:]
 }
 
-// 验证工作量，只要哈希小于目标就是有效工作量
+// Validate validates block's PoW
 func (pow *ProofOfWork) Validate() bool {
 	var hashInt big.Int
 

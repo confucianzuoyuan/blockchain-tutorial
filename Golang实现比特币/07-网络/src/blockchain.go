@@ -16,11 +16,13 @@ const dbFile = "blockchain_%s.db"
 const blocksBucket = "blocks"
 const genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
+// Blockchain implements interactions with a DB
 type Blockchain struct {
 	tip []byte
 	db  *bolt.DB
 }
 
+// CreateBlockchain creates a new blockchain DB
 func CreateBlockchain(address, nodeID string) *Blockchain {
 	dbFile := fmt.Sprintf(dbFile, nodeID)
 	if dbExists(dbFile) {
@@ -64,9 +66,9 @@ func CreateBlockchain(address, nodeID string) *Blockchain {
 	bc := Blockchain{tip, db}
 
 	return &bc
-
 }
 
+// NewBlockchain creates a new Blockchain with genesis Block
 func NewBlockchain(nodeID string) *Blockchain {
 	dbFile := fmt.Sprintf(dbFile, nodeID)
 	if dbExists(dbFile) == false {
@@ -93,10 +95,9 @@ func NewBlockchain(nodeID string) *Blockchain {
 	bc := Blockchain{tip, db}
 
 	return &bc
-
 }
 
-// 将区块添加到区块链上，底层存储为boltDB
+// AddBlock saves the block into the blockchain
 func (bc *Blockchain) AddBlock(block *Block) {
 	err := bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
@@ -131,7 +132,7 @@ func (bc *Blockchain) AddBlock(block *Block) {
 	}
 }
 
-// 通过交易id寻找一笔交易
+// FindTransaction finds a transaction by its ID
 func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 	bci := bc.Iterator()
 
@@ -152,8 +153,7 @@ func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 	return Transaction{}, errors.New("Transaction is not found")
 }
 
-// 寻找utxo交易
-// 通过对区块进行迭代找到所有未花费输出。
+// FindUTXO finds all unspent transaction outputs and returns transactions with spent outputs removed
 func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 	UTXO := make(map[string]TXOutputs)
 	spentTXOs := make(map[string][]int)
@@ -166,8 +166,8 @@ func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 			txID := hex.EncodeToString(tx.ID)
 
 		Outputs:
-			// 遍历某一笔交易的输出
 			for outIdx, out := range tx.Vout {
+				// Was the output spent?
 				if spentTXOs[txID] != nil {
 					for _, spentOutIdx := range spentTXOs[txID] {
 						if spentOutIdx == outIdx {
@@ -181,7 +181,6 @@ func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 				UTXO[txID] = outs
 			}
 
-			// 如果这笔交易不是coinbase交易, 将这笔交易的输入都存放到spentTXOs中，因为这些输入肯定是被花费的。
 			if tx.IsCoinbase() == false {
 				for _, in := range tx.Vin {
 					inTxID := hex.EncodeToString(in.Txid)
@@ -198,7 +197,14 @@ func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 	return UTXO
 }
 
-// 返回最后一个区块的高度
+// Iterator returns a BlockchainIterat
+func (bc *Blockchain) Iterator() *BlockchainIterator {
+	bci := &BlockchainIterator{bc.tip, bc.db}
+
+	return bci
+}
+
+// GetBestHeight returns the height of the latest block
 func (bc *Blockchain) GetBestHeight() int {
 	var lastBlock Block
 
@@ -217,7 +223,7 @@ func (bc *Blockchain) GetBestHeight() int {
 	return lastBlock.Height
 }
 
-// 根据一个区块的哈希查找区块
+// GetBlock finds a block by its hash and returns it
 func (bc *Blockchain) GetBlock(blockHash []byte) (Block, error) {
 	var block Block
 
@@ -259,11 +265,13 @@ func (bc *Blockchain) GetBlockHashes() [][]byte {
 	return blocks
 }
 
+// MineBlock mines a new block with the provided transactions
 func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
-	var lashHeight int
+	var lastHeight int
 
 	for _, tx := range transactions {
+		// TODO: ignore transaction if it's not valid
 		if bc.VerifyTransaction(tx) != true {
 			log.Panic("ERROR: Invalid transaction")
 		}
@@ -276,7 +284,7 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 		blockData := b.Get(lastHash)
 		block := DeserializeBlock(blockData)
 
-		lashHeight = block.Height
+		lastHeight = block.Height
 
 		return nil
 	})
@@ -284,7 +292,7 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 		log.Panic(err)
 	}
 
-	newBlock := NewBlock(transactions, lastHash, lashHeight+1)
+	newBlock := NewBlock(transactions, lastHash, lastHeight+1)
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
@@ -309,23 +317,22 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	return newBlock
 }
 
-// 判断一个db文件是否存在
-func dbExists(dbFile string) bool {
-	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
-		return false
+// SignTransaction signs inputs of a Transaction
+func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
+	prevTXs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.FindTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
 
-	return true
+	tx.Sign(privKey, prevTXs)
 }
 
-// 返回一个区块链迭代器，设置 Blockchain 实例的 tip 为数据库中存储的最后一个块的哈希
-func (bc *Blockchain) Iterator() *BlockchainIterator {
-	bci := &BlockchainIterator{bc.tip, bc.db}
-
-	return bci
-}
-
-// 校验一笔交易的输入的签名
+// VerifyTransaction verifies transaction input signatures
 func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
 	if tx.IsCoinbase() {
 		return true
@@ -344,17 +351,10 @@ func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
 	return tx.Verify(prevTXs)
 }
 
-// 对一笔交易的输入进行签名
-func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
-	prevTXs := make(map[string]Transaction)
-
-	for _, vin := range tx.Vin {
-		prevTX, err := bc.FindTransaction(vin.Txid)
-		if err != nil {
-			log.Panic(err)
-		}
-		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
+func dbExists(dbFile string) bool {
+	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
+		return false
 	}
 
-	tx.Sign(privKey, prevTXs)
+	return true
 }

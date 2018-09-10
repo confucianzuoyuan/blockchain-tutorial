@@ -15,23 +15,21 @@ import (
 	"log"
 )
 
-// subsidy 是挖出新块的奖励金
 const subsidy = 10
 
-// 交易的结构体组成
+// Transaction represents a Bitcoin transaction
 type Transaction struct {
 	ID   []byte
 	Vin  []TXInput
 	Vout []TXOutput
 }
 
-// coinbase 是一种特殊的交易, 输入的交易只有一笔，且id为0, Vin[0]的Vout为 -1
-// 在 coinbase 交易中，没有输入，所以也就不需要签名。coinbase 交易的输出包含了一个哈希过的公钥（使用的是 RIPEMD16(SHA256(PubKey)) 算法）
+// IsCoinbase checks whether the transaction is coinbase
 func (tx Transaction) IsCoinbase() bool {
 	return len(tx.Vin) == 1 && len(tx.Vin[0].Txid) == 0 && tx.Vin[0].Vout == -1
 }
 
-// 将交易序列化为 字节数组
+// Serialize returns a serialized Transaction
 func (tx Transaction) Serialize() []byte {
 	var encoded bytes.Buffer
 
@@ -44,7 +42,7 @@ func (tx Transaction) Serialize() []byte {
 	return encoded.Bytes()
 }
 
-// 计算 交易 的哈希
+// Hash returns the hash of the Transaction
 func (tx *Transaction) Hash() []byte {
 	var hash [32]byte
 
@@ -56,10 +54,8 @@ func (tx *Transaction) Hash() []byte {
 	return hash[:]
 }
 
-// 对 交易 进行签名
-// 交易必须被签名，因为这是比特币里面保证发送方不会花费属于其他人的币的唯一方式。
+// Sign signs each input of a Transaction
 func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transaction) {
-	// coinbase 交易因为没有实际输入，所以没有被签名。
 	if tx.IsCoinbase() {
 		return
 	}
@@ -70,7 +66,6 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 		}
 	}
 
-	// 将会被签署的是修剪后的交易副本，而不是一个完整交易：
 	txCopy := tx.TrimmedCopy()
 
 	for inID, vin := range txCopy.Vin {
@@ -78,15 +73,12 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 		txCopy.Vin[inID].Signature = nil
 		txCopy.Vin[inID].PubKey = prevTx.Vout[vin.Vout].PubKeyHash
 
-		// Sprintf 用来格式化字符串
 		dataToSign := fmt.Sprintf("%x\n", txCopy)
 
-		// 对 dataToSign 数据进行签名
 		r, s, err := ecdsa.Sign(rand.Reader, &privKey, []byte(dataToSign))
 		if err != nil {
 			log.Panic(err)
 		}
-		// 签名为 r 和 s 的拼接
 		signature := append(r.Bytes(), s.Bytes()...)
 
 		tx.Vin[inID].Signature = signature
@@ -94,29 +86,31 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 	}
 }
 
-// 返回 交易 的 可读性强 的 字符串表示
+// String returns a human-readable representation of a transaction
 func (tx Transaction) String() string {
 	var lines []string
 
 	lines = append(lines, fmt.Sprintf("--- Transaction %x:", tx.ID))
 
 	for i, input := range tx.Vin {
-		lines = append(lines, fmt.Sprintf("    Input %d:", i))
-		lines = append(lines, fmt.Sprintf("      TXID:      %x", input.Txid))
-		lines = append(lines, fmt.Sprintf("      Out:       %d", input.Vout))
-		lines = append(lines, fmt.Sprintf("      Signature: %x", input.Signature))
-		lines = append(lines, fmt.Sprintf("      PubKey:    %x", input.PubKey))
+
+		lines = append(lines, fmt.Sprintf("     Input %d:", i))
+		lines = append(lines, fmt.Sprintf("       TXID:      %x", input.Txid))
+		lines = append(lines, fmt.Sprintf("       Out:       %d", input.Vout))
+		lines = append(lines, fmt.Sprintf("       Signature: %x", input.Signature))
+		lines = append(lines, fmt.Sprintf("       PubKey:    %x", input.PubKey))
 	}
 
 	for i, output := range tx.Vout {
-		lines = append(lines, fmt.Sprintf("    Output %d:", i))
-		lines = append(lines, fmt.Sprintf("      Value:   %d", output.Value))
-		lines = append(lines, fmt.Sprintf("      Script:  %x", output.PubKeyHash))
+		lines = append(lines, fmt.Sprintf("     Output %d:", i))
+		lines = append(lines, fmt.Sprintf("       Value:  %d", output.Value))
+		lines = append(lines, fmt.Sprintf("       Script: %x", output.PubKeyHash))
 	}
 
 	return strings.Join(lines, "\n")
 }
 
+// TrimmedCopy creates a trimmed copy of Transaction to be used in signing
 func (tx *Transaction) TrimmedCopy() Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
@@ -134,6 +128,7 @@ func (tx *Transaction) TrimmedCopy() Transaction {
 	return txCopy
 }
 
+// Verify verifies signatures of Transaction inputs
 func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 	if tx.IsCoinbase() {
 		return true
@@ -161,13 +156,13 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 
 		x := big.Int{}
 		y := big.Int{}
-		KeyLen := len(vin.PubKey)
-		x.SetBytes(vin.PubKey[:(KeyLen / 2)])
-		y.SetBytes(vin.PubKey[(KeyLen / 2):])
+		keyLen := len(vin.PubKey)
+		x.SetBytes(vin.PubKey[:(keyLen / 2)])
+		y.SetBytes(vin.PubKey[(keyLen / 2):])
 
 		dataToVerify := fmt.Sprintf("%x\n", txCopy)
 
-		rawPubKey := ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
+		rawPubKey := ecdsa.PublicKey{curve, &x, &y}
 		if ecdsa.Verify(&rawPubKey, []byte(dataToVerify), &r, &s) == false {
 			return false
 		}
@@ -177,7 +172,7 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 	return true
 }
 
-// 新的 coinbase 交易 奖励给 挖矿者, to 存储了 挖矿者 的地址
+// NewCoinbaseTX creates a new coinbase transaction
 func NewCoinbaseTX(to, data string) *Transaction {
 	if data == "" {
 		randData := make([]byte, 20)
@@ -197,19 +192,19 @@ func NewCoinbaseTX(to, data string) *Transaction {
 	return &tx
 }
 
-// 新utxo交易的创建
+// NewUTXOTransaction creates a new transaction
 func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
 	pubKeyHash := HashPubKey(wallet.PublicKey)
-	// 找到可花费输出
 	acc, validOutputs := UTXOSet.FindSpendableOutputs(pubKeyHash, amount)
 
 	if acc < amount {
 		log.Panic("ERROR: Not enough funds")
 	}
 
+	// Build a list of inputs
 	for txid, outs := range validOutputs {
 		txID, err := hex.DecodeString(txid)
 		if err != nil {
@@ -222,10 +217,11 @@ func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet)
 		}
 	}
 
+	// Build a list of outputs
 	from := fmt.Sprintf("%s", wallet.GetAddress())
 	outputs = append(outputs, *NewTXOutput(amount, to))
 	if acc > amount {
-		outputs = append(outputs, *NewTXOutput(acc-amount, from))
+		outputs = append(outputs, *NewTXOutput(acc-amount, from)) // a change
 	}
 
 	tx := Transaction{nil, inputs, outputs}
@@ -235,7 +231,7 @@ func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet)
 	return &tx
 }
 
-// 将 字节数组 反序列化 为 交易
+// DeserializeTransaction deserializes a transaction
 func DeserializeTransaction(data []byte) Transaction {
 	var transaction Transaction
 

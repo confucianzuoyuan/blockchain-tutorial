@@ -1,19 +1,18 @@
 package main
 
-// BlockChain 是一个 Block 指针数组
-type BlockChain struct {
+// Blockchain keeps a sequence of Blocks
+type Blockchain struct {
 	blocks []*Block
 }
 
-// NewBlockChain 创建一个有创世块的链
-func NewBlockChain() *BlockChain {
-	return &BlockChain{[]*Block{NewGenesisBlock()}}
-}
-
-// AddBlock 向链中加入一个新块
-// data 在实际中就是交易
-func (bc *BlockChain) AddBlock(data string) {
+// AddBlock saves provided data as a block in the blockchain
+func (bc *Blockchain) AddBlock(data string) {
 	prevBlock := bc.blocks[len(bc.blocks)-1]
 	newBlock := NewBlock(data, prevBlock.Hash)
 	bc.blocks = append(bc.blocks, newBlock)
+}
+
+// NewBlockchain creates a new Blockchain with genesis Block
+func NewBlockchain() *Blockchain {
+	return &Blockchain{[]*Block{NewGenesisBlock()}}
 }

@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// 十进制 转 十六进制
+// IntToHex converts an int64 to a byte array
 func IntToHex(num int64) []byte {
 	buff := new(bytes.Buffer)
 	err := binary.Write(buff, binary.BigEndian, num)
@@ -17,7 +17,7 @@ func IntToHex(num int64) []byte {
 	return buff.Bytes()
 }
 
-// 翻转 字节数组
+// ReverseBytes reverses a byte array
 func ReverseBytes(data []byte) {
 	for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
 		data[i], data[j] = data[j], data[i]

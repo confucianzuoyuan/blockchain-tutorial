@@ -7,25 +7,19 @@ import (
 	"time"
 )
 
+// Block represents a block in the blockchain
 type Block struct {
-	// 时间戳
-	Timestamp int64
-	// 交易
-	Transactions []*Transaction
-	// 上一个区块的哈希
+	Timestamp     int64
+	Transactions  []*Transaction
 	PrevBlockHash []byte
-	// 当前区块哈希
-	Hash []byte
-	// 随机数
-	Nonce int
-	// 区块高度
-	Height int
+	Hash          []byte
+	Nonce         int
+	Height        int
 }
 
-// 新产生一个区块，挖矿的函数
+// NewBlock creates and returns Block
 func NewBlock(transactions []*Transaction, prevBlockHash []byte, height int) *Block {
 	block := &Block{time.Now().Unix(), transactions, prevBlockHash, []byte{}, 0, height}
-	// 工作量证明
 	pow := NewProofOfWork(block)
 	nonce, hash := pow.Run()
 
@@ -35,25 +29,24 @@ func NewBlock(transactions []*Transaction, prevBlockHash []byte, height int) *Bl
 	return block
 }
 
-// 新建创世区块，使用coinbase
+// NewGenesisBlock creates and returns genesis Block
 func NewGenesisBlock(coinbase *Transaction) *Block {
 	return NewBlock([]*Transaction{coinbase}, []byte{}, 0)
 }
 
-// 将交易进行哈希
+// HashTransactions returns a hash of the transactions in the block
 func (b *Block) HashTransactions() []byte {
-	var transactons [][]byte
+	var transactions [][]byte
 
 	for _, tx := range b.Transactions {
-		transactons = append(transactons, tx.Serialize())
+		transactions = append(transactions, tx.Serialize())
 	}
-	// 使用交易产生merkle tree
-	mTree := NewMerkleTree(transactons)
+	mTree := NewMerkleTree(transactions)
 
 	return mTree.RootNode.Data
 }
 
-// Block 结构体的 序列化函数，将 结构体b 序列化为一个字节数组
+// Serialize serializes the block
 func (b *Block) Serialize() []byte {
 	var result bytes.Buffer
 	encoder := gob.NewEncoder(&result)
@@ -66,7 +59,7 @@ func (b *Block) Serialize() []byte {
 	return result.Bytes()
 }
 
-// 反序列化为一个Block结构体，上一个函数的反函数
+// DeserializeBlock deserializes a block
 func DeserializeBlock(d []byte) *Block {
 	var block Block
 

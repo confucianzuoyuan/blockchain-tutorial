@@ -47,7 +47,7 @@ type inv struct {
 }
 
 type tx struct {
-	AddrFrom    string
+	AddFrom     string
 	Transaction []byte
 }
 
@@ -57,7 +57,6 @@ type verzion struct {
 	AddrFrom   string
 }
 
-// 将 string 转成 []byte，可变与不可变的区别
 func commandToBytes(command string) []byte {
 	var bytes [commandLength]byte
 
@@ -68,7 +67,6 @@ func commandToBytes(command string) []byte {
 	return bytes[:]
 }
 
-// []byte => string
 func bytesToCommand(bytes []byte) string {
 	var command []byte
 
@@ -201,7 +199,7 @@ func handleBlock(request []byte, bc *Blockchain) {
 	blockData := payload.Block
 	block := DeserializeBlock(blockData)
 
-	fmt.Println("Received a new block!")
+	fmt.Println("Recevied a new block!")
 	bc.AddBlock(block)
 
 	fmt.Printf("Added block %x\n", block.Hash)
@@ -210,7 +208,7 @@ func handleBlock(request []byte, bc *Blockchain) {
 		blockHash := blocksInTransit[0]
 		sendGetData(payload.AddrFrom, "block", blockHash)
 
-		blocksInTransit = blocksInTransit[:]
+		blocksInTransit = blocksInTransit[1:]
 	} else {
 		UTXOSet := UTXOSet{bc}
 		UTXOSet.Reindex()
@@ -228,7 +226,7 @@ func handleInv(request []byte, bc *Blockchain) {
 		log.Panic(err)
 	}
 
-	fmt.Printf("Received inventory with %d %s\n", len(payload.Items), payload.Type)
+	fmt.Printf("Recevied inventory with %d %s\n", len(payload.Items), payload.Type)
 
 	if payload.Type == "block" {
 		blocksInTransit = payload.Items
@@ -256,6 +254,21 @@ func handleInv(request []byte, bc *Blockchain) {
 
 func handleGetBlocks(request []byte, bc *Blockchain) {
 	var buff bytes.Buffer
+	var payload getblocks
+
+	buff.Write(request[commandLength:])
+	dec := gob.NewDecoder(&buff)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	blocks := bc.GetBlockHashes()
+	sendInv(payload.AddrFrom, "block", blocks)
+}
+
+func handleGetData(request []byte, bc *Blockchain) {
+	var buff bytes.Buffer
 	var payload getdata
 
 	buff.Write(request[commandLength:])
@@ -279,34 +292,7 @@ func handleGetBlocks(request []byte, bc *Blockchain) {
 		tx := mempool[txID]
 
 		sendTx(payload.AddrFrom, &tx)
-	}
-}
-
-func handleGetData(request []byte, bc *Blockchain) {
-	var buff bytes.Buffer
-	var payload getdata
-
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	if payload.Type == "block" {
-		block, err := bc.GetBlock([]byte(payload.ID))
-		if err != nil {
-			log.Panic(err)
-		}
-
-		sendBlock(payload.AddrFrom, &block)
-	}
-
-	if payload.Type == "tx" {
-		txID := hex.EncodeToString(payload.ID)
-		tx := mempool[txID]
-
-		sendTx(payload.AddrFrom, &tx)
+		// delete(mempool, txID)
 	}
 }
 
@@ -327,7 +313,7 @@ func handleTx(request []byte, bc *Blockchain) {
 
 	if nodeAddress == knownNodes[0] {
 		for _, node := range knownNodes {
-			if node != nodeAddress && node != payload.AddrFrom {
+			if node != nodeAddress && node != payload.AddFrom {
 				sendInv(node, "tx", [][]byte{tx.ID})
 			}
 		}
@@ -395,12 +381,13 @@ func handleVersion(request []byte, bc *Blockchain) {
 		sendVersion(payload.AddrFrom, bc)
 	}
 
+	// sendAddr(payload.AddrFrom)
 	if !nodeIsKnown(payload.AddrFrom) {
 		knownNodes = append(knownNodes, payload.AddrFrom)
 	}
 }
 
-func handleConnetion(conn net.Conn, bc *Blockchain) {
+func handleConnection(conn net.Conn, bc *Blockchain) {
 	request, err := ioutil.ReadAll(conn)
 	if err != nil {
 		log.Panic(err)
@@ -430,14 +417,15 @@ func handleConnetion(conn net.Conn, bc *Blockchain) {
 	conn.Close()
 }
 
+// StartServer starts a node
 func StartServer(nodeID, minerAddress string) {
 	nodeAddress = fmt.Sprintf("localhost:%s", nodeID)
 	miningAddress = minerAddress
-	In, err := net.Listen(protocol, nodeAddress)
+	ln, err := net.Listen(protocol, nodeAddress)
 	if err != nil {
 		log.Panic(err)
 	}
-	defer In.Close()
+	defer ln.Close()
 
 	bc := NewBlockchain(nodeID)
 
@@ -446,11 +434,11 @@ func StartServer(nodeID, minerAddress string) {
 	}
 
 	for {
-		conn, err := In.Accept()
+		conn, err := ln.Accept()
 		if err != nil {
 			log.Panic(err)
 		}
-		go handleConnetion(conn, bc)
+		go handleConnection(conn, bc)
 	}
 }
 

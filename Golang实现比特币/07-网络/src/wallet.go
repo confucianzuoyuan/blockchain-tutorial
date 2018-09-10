@@ -14,13 +14,13 @@ import (
 const version = byte(0x00)
 const addressChecksumLen = 4
 
-// 钱包 由 公钥和私钥 组成
+// Wallet stores private and public keys
 type Wallet struct {
 	PrivateKey ecdsa.PrivateKey
 	PublicKey  []byte
 }
 
-// 新建一个钱包
+// NewWallet creates and returns a Wallet
 func NewWallet() *Wallet {
 	private, public := newKeyPair()
 	wallet := Wallet{private, public}
@@ -28,12 +28,7 @@ func NewWallet() *Wallet {
 	return &wallet
 }
 
-// 将一个公钥转换成一个 Base58 地址需要以下步骤：
-// 1, 使用 RIPEMD160(SHA256(PubKey)) 哈希算法，取公钥并对其哈希两次
-// 2, 给哈希加上地址生成算法版本的前缀
-// 3, 对于第二步生成的结果，使用 SHA256(SHA256(payload)) 再哈希，计算校验和。校验和是结果哈希的前四个字节。
-// 4, 将校验和附加到 version+PubKeyHash 的组合中。
-// 5, 使用 Base58 对 version+PubKeyHash+checksum 组合进行编码。
+// GetAddress returns wallet address
 func (w Wallet) GetAddress() []byte {
 	pubKeyHash := HashPubKey(w.PublicKey)
 
@@ -46,14 +41,7 @@ func (w Wallet) GetAddress() []byte {
 	return address
 }
 
-// checksum 总和校验码
-func checksum(payload []byte) []byte {
-	firstSHA := sha256.Sum256(payload)
-	secondSHA := sha256.Sum256(firstSHA[:])
-
-	return secondSHA[:addressChecksumLen]
-}
-
+// HashPubKey hashes public key
 func HashPubKey(pubKey []byte) []byte {
 	publicSHA256 := sha256.Sum256(pubKey)
 
@@ -67,7 +55,7 @@ func HashPubKey(pubKey []byte) []byte {
 	return publicRIPEMD160
 }
 
-// 校验一个地址
+// ValidateAddress check if address if valid
 func ValidateAddress(address string) bool {
 	pubKeyHash := Base58Decode([]byte(address))
 	actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
@@ -78,7 +66,14 @@ func ValidateAddress(address string) bool {
 	return bytes.Compare(actualChecksum, targetChecksum) == 0
 }
 
-// 创建一对私钥和公钥对
+// Checksum generates a checksum for a public key
+func checksum(payload []byte) []byte {
+	firstSHA := sha256.Sum256(payload)
+	secondSHA := sha256.Sum256(firstSHA[:])
+
+	return secondSHA[:addressChecksumLen]
+}
+
 func newKeyPair() (ecdsa.PrivateKey, []byte) {
 	curve := elliptic.P256()
 	private, err := ecdsa.GenerateKey(curve, rand.Reader)

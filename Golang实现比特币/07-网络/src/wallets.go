@@ -12,10 +12,12 @@ import (
 
 const walletFile = "wallet_%s.dat"
 
+// Wallets stores a collection of wallets
 type Wallets struct {
 	Wallets map[string]*Wallet
 }
 
+// NewWallets creates Wallets and fills it from a file if it exists
 func NewWallets(nodeID string) (*Wallets, error) {
 	wallets := Wallets{}
 	wallets.Wallets = make(map[string]*Wallet)
@@ -25,6 +27,7 @@ func NewWallets(nodeID string) (*Wallets, error) {
 	return &wallets, err
 }
 
+// CreateWallet adds a Wallet to Wallets
 func (ws *Wallets) CreateWallet() string {
 	wallet := NewWallet()
 	address := fmt.Sprintf("%s", wallet.GetAddress())
@@ -34,6 +37,7 @@ func (ws *Wallets) CreateWallet() string {
 	return address
 }
 
+// GetAddresses returns an array of addresses stored in the wallet file
 func (ws *Wallets) GetAddresses() []string {
 	var addresses []string
 
@@ -44,10 +48,12 @@ func (ws *Wallets) GetAddresses() []string {
 	return addresses
 }
 
+// GetWallet returns a Wallet by its address
 func (ws Wallets) GetWallet(address string) Wallet {
 	return *ws.Wallets[address]
 }
 
+// LoadFromFile loads wallets from the file
 func (ws *Wallets) LoadFromFile(nodeID string) error {
 	walletFile := fmt.Sprintf(walletFile, nodeID)
 	if _, err := os.Stat(walletFile); os.IsNotExist(err) {
@@ -72,6 +78,7 @@ func (ws *Wallets) LoadFromFile(nodeID string) error {
 	return nil
 }
 
+// SaveToFile saves wallets to a file
 func (ws Wallets) SaveToFile(nodeID string) {
 	var content bytes.Buffer
 	walletFile := fmt.Sprintf(walletFile, nodeID)

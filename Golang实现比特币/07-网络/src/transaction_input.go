@@ -1,10 +1,8 @@
 package main
 
-import (
-	"bytes"
-)
+import "bytes"
 
-// 输入交易：交易id，输出Vout，签名，公钥
+// TXInput represents a transaction input
 type TXInput struct {
 	Txid      []byte
 	Vout      int
@@ -12,7 +10,7 @@ type TXInput struct {
 	PubKey    []byte
 }
 
-// UsesKey 方法检查输入使用了指定密钥来解锁一个输出。注意到输入存储的是原生的公钥（也就是没有被哈希的公钥），但是这个函数要求的是哈希后的公钥。
+// UsesKey checks whether the address initiated the transaction
 func (in *TXInput) UsesKey(pubKeyHash []byte) bool {
 	lockingHash := HashPubKey(in.PubKey)
 

@@ -1,8 +1,6 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func (cli *CLI) reindexUTXO(nodeID string) {
 	bc := NewBlockchain(nodeID)
