@@ -108,7 +108,7 @@ eBay 已经获得了巨大成功，因为它使得买卖都相当便利。在互
 
 ## 3.1，Truffle项目
 
-要做的第一件事就是启动 truffle 项目。按照右侧指示创建 truffle 项目。
+要做的第一件事就是启动 truffle 项目。按照下面的指示创建 truffle 项目。
 
 在接下来的几节，我们将会实现合约。下面是将要在合约中实现的几个用户场景：
 
@@ -129,7 +129,7 @@ $ rm contracts/ConvertLib.sol contracts/MetaCoin.sol
 
 ## 3.2，电子商务产品
 
->在 contracts 目录下创建一个新的文件，将右侧内容添加到里面。下面是合约细节。
+>在 contracts 目录下创建一个新的文件 EcommerceStore.sol，将代码内容添加到里面。下面是合约细节。
 
 ### 存储产品和元数据的数据结构
 
@@ -179,7 +179,7 @@ contract EcommerceStore {
   ProductCondition condition;
  }
 
- function EcommerceStore() public {
+ constructor() public {
   productIndex = 0;
  }
 }
@@ -189,7 +189,7 @@ contract EcommerceStore {
 
 向链上添加并检索产品
 
-既然我们已经定义了产品的数据结构，让我们将产品添加到区块链并进行检索。我们建议你尝试按照下面的指引实现函数，右侧实现仅作参考之用。
+既然我们已经定义了产品的数据结构，让我们将产品添加到区块链并进行检索。建议你尝试按照下面的指引实现函数，下面代码实现仅作参考之用。
 
 1，新建一个叫做 addProductToStore 的函数，参数为构建 product 结构的所需内容（除了出价相关的变量）。
 
@@ -301,7 +301,7 @@ truffle(development)>  EcommerceStore.deployed().then(function(i) {i.getProduct.
 
 ### 拍卖是如何工作的
 
-我们成功地向区块链添加了一个产品。现在，用户应该能够像在 eBay 上一样对你的商品进行出价。eBay 有几种不同类型的拍卖，比如增量竞价（incremental bidding），自动竞价（automatic bidding）等等。更多内容可见 这里。下面是 eBay 自动竞价的一个工作案例：
+我们成功地向区块链添加了一个产品。现在，用户应该能够像在 eBay 上一样对你的商品进行出价。eBay 有几种不同类型的拍卖，比如增量竞价（incremental bidding），自动竞价（automatic bidding）等等。下面是 eBay 自动竞价的一个工作案例：
 
 比如说一个商品标价为 10 美元。只要高于 10 美元，你可以任意出价：
 
