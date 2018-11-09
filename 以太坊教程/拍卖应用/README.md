@@ -363,7 +363,7 @@ Alice 通过向合约发送 10.50 美元和 “secretstring” 来揭示她的�
 
 John 仅出价 12 美元。当揭示报价时，因为 John 输掉了竞价所以他会立刻收到返还的资金。
 
-在本例中， Mary 赢得竞价，并支付 10.50 美元（第二高的报价）。
+在本例中， Mary 赢得竞价，并支付 12 美元（第二高的报价）。
 
 ## 3.8，合约代码
 
@@ -480,9 +480,9 @@ function revealBid(uint _productId, string _amount, string _secret) public {
     refund = bidInfo.value - amount;
    } else if (amount > product.secondHighestBid) {
     product.secondHighestBid = amount;
-    refund = amount;
+    refund = bidInfo.value;
    } else {
-    refund = amount;
+    refund = bidInfo.value;
    }
   }
  }
