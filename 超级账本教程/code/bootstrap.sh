@@ -6,27 +6,41 @@
 #
 
 # if version not passed in, default to latest released version
+# 我们使用fabric 1.3.0
 export VERSION=1.3.0
 # if ca version not passed in, default to latest released version
+# fabric-ca的版本也是1.3.0
 export CA_VERSION=$VERSION
 # current version of thirdparty images (couchdb, kafka and zookeeper) released
+# 第三方镜像的版本为0.4.13
 export THIRDPARTY_IMAGE_VERSION=0.4.13
+# 以下变量获取了当前操作系统的类型：linux_amd64还是darwin/x86_64。
 export ARCH=$(echo "$(uname -s|tr '[:upper:]' '[:lower:]'|sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')")
+# 以下变量获取了操作系统的位数如x86_64。
 export MARCH=$(uname -m)
 
+# 帮助信息
 printHelp() {
   echo "Usage: bootstrap.sh [version [ca_version [thirdparty_version]]] [options]"
   echo
   echo "options:"
   echo "-h : this help"
+  # -d: 忽略docker镜像的安装
   echo "-d : bypass docker image download"
+  # -s: 忽略官方示例的安装
   echo "-s : bypass fabric-samples repo clone"
+  # -b: 忽略可执行文件的下载
   echo "-b : bypass download of platform-specific binaries"
   echo
   echo "e.g. bootstrap.sh 1.3.0 -s"
   echo "would download docker images and binaries for version 1.3.0"
 }
 
+# 拉取Fabric的镜像：peer, orderer, ccenv, javaenv, tools
+# peer: 节点
+# orderer: 排序节点
+# ccenv, javaenv: 执行环境
+# tools: 工具
 dockerFabricPull() {
   local FABRIC_TAG=$1
   for IMAGES in peer orderer ccenv javaenv tools; do
@@ -37,6 +51,7 @@ dockerFabricPull() {
   done
 }
 
+# 下载第三方镜像: couchdb, kafka, zookeeper。
 dockerThirdPartyImagesPull() {
   local THIRDPARTY_TAG=$1
   for IMAGES in couchdb kafka zookeeper; do
@@ -47,6 +62,7 @@ dockerThirdPartyImagesPull() {
   done
 }
 
+# 下载fabric-ca镜像，用于处理一些和数字证书有关的东西。
 dockerCaPull() {
       local CA_TAG=$1
       echo "==> FABRIC CA IMAGE"
@@ -55,6 +71,7 @@ dockerCaPull() {
       docker tag hyperledger/fabric-ca:$CA_TAG hyperledger/fabric-ca
 }
 
+# 下载官方示例。
 samplesInstall() {
   # clone (if needed) hyperledger/fabric-samples and checkout corresponding
   # version to the binaries and docker images to be downloaded
@@ -132,6 +149,7 @@ binaryDownload() {
       fi
 }
 
+# 下载安装可执行文件。
 binariesInstall() {
   echo "===> Downloading version ${FABRIC_TAG} platform specific fabric binaries"
   binaryDownload ${BINARY_FILE} https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${VERSION}/${BINARY_FILE}
@@ -150,6 +168,7 @@ binariesInstall() {
    fi
 }
 
+# 安装docker镜像。
 dockerInstall() {
   which docker >& /dev/null
   NODOCKER=$?
@@ -170,6 +189,7 @@ dockerInstall() {
   fi
 }
 
+# 控制变量
 DOCKER=true
 SAMPLES=true
 BINARIES=true
@@ -217,6 +237,7 @@ while getopts "h?dsb" opt; do
   esac
 done
 
+# 调用前面定义的各种shell函数，执行脚本
 if [ "$SAMPLES" == "true" ]; then
   echo
   echo "Installing hyperledger/fabric-samples repo"
