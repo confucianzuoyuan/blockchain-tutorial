@@ -237,7 +237,7 @@ function getProduct(uint _productId) view public returns (uint, string, string, 
 
 1，打开 terminal 启动 ganache。
 
-2，像右侧这样编辑 migration 文件，保存并将合约部署到区块链。
+2，像下面这样编辑 migration 文件，保存并将合约部署到区块链。
 
 3，启动 truffle 控制台并向区块链添加一个商品。你可以给图片和描述链接随机输入一些内容（在实现 IPFS 的相关功能呢后，我们会来改进这一点）。
 
@@ -363,7 +363,7 @@ Alice 通过向合约发送 10.50 美元和 “secretstring” 来揭示她的�
 
 John 仅出价 12 美元。当揭示报价时，因为 John 输掉了竞价所以他会立刻收到返还的资金。
 
-在本例中， Mary 赢得竞价，并支付 10.50 美元（第二高的报价）。
+在本例中， Mary 赢得竞价，并支付 12 美元（第二高的报价）。
 
 ## 3.8，合约代码
 
@@ -480,9 +480,9 @@ function revealBid(uint _productId, string _amount, string _secret) public {
     refund = bidInfo.value - amount;
    } else if (amount > product.secondHighestBid) {
     product.secondHighestBid = amount;
-    refund = amount;
+    refund = bidInfo.value;
    } else {
-    refund = amount;
+    refund = bidInfo.value;
    }
   }
  }
@@ -599,11 +599,11 @@ truffle(development)>  EcommerceStore.deployed().then(function(i) {i.highestBidd
 
 ## 4.2，安装
 
-你可以在 https://dist.ipfs.io/#go-ipfs 下载 IPFS 的 go 实现。安装和设置步骤见右侧。
+你可以在 https://dist.ipfs.io/#go-ipfs 下载 IPFS 的 go 实现。安装和设置步骤见下。
 
 如果你的安装和设置成功，当运行 ipfs daemon 后，IPFS 服务器应该会启动并在 5001 端口监听。
 
-如果对 Linux 命令行熟悉，你应该知道像 ls，cat 等基本命令。IPFS 也使用类似的命令。如右侧所示，可以玩一下 IPFS。
+如果对 Linux 命令行熟悉，你应该知道像 ls，cat 等基本命令。IPFS 也使用类似的命令。如下所示，可以玩一下 IPFS。
 
 IIPFS 也有一个漂亮的 UI 前端，在 http://localhost:5001/webui 进行查看。
 
@@ -661,7 +661,7 @@ $ added QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk description.html
 - 2, 一个用户用来添加产品到区块链的网页。
 - 3, 第三个页面，用户可以看到产品细节，上面的出价以及揭示他们的出价。
 
-为了通过前端与 IPFS 进行交互，我们是用到一个叫做 ipfs-api 的 JavaScript 库。将这个库添加到 package.json 并运行 npm install。打开 app/javascript/app.js 并移除所有 MetaCoin（truffle 创建的示例应用）相关的代码。剩下合约和初始化后的 IPFS 空文件类似右侧的文件。
+为了通过前端与 IPFS 进行交互，我们是用到一个叫做 ipfs-api 的 JavaScript 库。将这个库添加到 package.json 并运行 npm install。打开 app/scripts/index.js 并移除所有 MetaCoin（truffle 创建的示例应用）相关的代码。剩下合约和初始化后的 IPFS 空文件类似下面的文件。
 
 `package.json`
 
@@ -673,7 +673,7 @@ $ added QmbLRFj5U6UGTy3o9Zt8jEnVDuAw2GKzvrrv3RED9wyGRk description.html
 }
 ```
 
-`app/javascripts/app.js`
+`app/scripts/index.js`
 
 ```js
 // Import the page's CSS. Webpack will know what to do with it.
@@ -718,11 +718,11 @@ window.addEventListener('load', function() {
 
 当开发本应用时，为了实现各种用户场景和测试，我们将会不断地将产品添加到区块链。与其通过 truffle 控制台一个一个地添加，我们会创建一个有一些产品的脚本，任何时候我们需要更多的产品时，就运行该脚本。这个脚本你想运行多少次都可以。
 
-创建一个右侧所示的种子文件，执行 truffle exec 命令来执行该脚本。
+创建一个下面所示的种子文件，执行 truffle exec 命令来执行该脚本。
 
 这个文件并没有什么特别之处。你已经知道了如何向商店添加产品。在这里你做的所有事情就是脚本化而已，将合约调用放到一个脚本并运行脚本。
 
-你会看到每个产品都有一对很长的哈希。这些就是我们在之前一节上传的图片和描述信息的 IPFS 哈希。n你的哈希可能会不同，你可以随意改变它或是不管也可以。
+你会看到每个产品都有一对很长的哈希。这些就是我们在之前一节上传的图片和描述信息的 IPFS 哈希。的哈希可能会不同，你可以随意改变它或是不管也可以。
 
 `seed.js`
 
@@ -752,7 +752,7 @@ $ truffle exec seed.js
 
 ## 5.3，HTML 设置
 
-当用户访问我们的 Dapp 时，他们第一眼看到的应该是商店里的产品列表。truffle 已经在 app/index.html 创建了一个 index 文件。用右侧内容替换 index 文件内容。
+当用户访问我们的 Dapp 时，他们第一眼看到的应该是商店里的产品列表。truffle 已经在 app/index.html 创建了一个 index 文件。用下面给出的代码内容替换 index 文件内容。
 
 它是一个框架文件，主要有两块内容，一个用来显示目前活跃并可出价的产品，一个用来显示拍卖已结束处于揭示出价阶段的产品。我们也会支持通过各种目录过滤产品（手机，衣服，礼品卡片等等）
 
@@ -810,13 +810,13 @@ $ truffle exec seed.js
 - 1，在 start 函数里面，为合约 artifact 设置提供者并调用叫做 renderStore 的函数。
 - 2，创建一个叫做 renderStore 的函数，它会查询区块链（通过调用 getProduct），并将结果附加到 index.html 里面定义的 product-list div。目前，仅需硬编码通过 id 1 和 2 查询产品即可。这仅仅是一个中间过程，最终会进行改进。
 
-如果你还没有启动前端服务器，运行 npm run dev 并访问 http://localhost:8081/。（你的端口可能会不一样，检查一下运行命令时的输出内容，里面会有端口号）。如果一切顺利，你应该看到下面这样的页面
+如果你还没有启动前端服务器，运行 npm run dev 并访问 http://localhost:8080/。（你的端口可能会不一样，检查一下运行命令时的输出内容，里面会有端口号）。如果一切顺利，你应该看到下面这样的页面
 
 ![首页](./images/ebay-dapp-frontend-1.png)
 
 它非常简洁，只有以 wei 显示的价格，以 seconds 显示的拍卖开始和结束时间等等。目前仅是中间过程，我们会在未来几节慢慢改进该页。
 
-`app.js`
+`index.js`
 
 ```js
 window.App = {
@@ -829,9 +829,9 @@ window.App = {
 };
 ```
 
-Add this to app.js but outside the window.App block
+把下面这部分代码添加到 index.js，注意放在 window.App 代码块之外。
 
-In the rest of the course, we will add all the function definitions outside the window.App block and only include the function invocations and event handlers inside it.
+在接下来的课程中，我们将会把所有的函数定义添加在 window.App 代码块外，只把函数调用和事件处理放在里面。
 
 ```js
 function renderStore() {
@@ -873,7 +873,7 @@ function buildProduct(product) {
 
 ## 5.6，陈列表单
 
-在 /app 目录下创建一个叫做 list-item.html 的新文件，内容在右侧。它是简单的 HTML 表格，其中的字段是为了手机产品细节。更新 webpack 配置将文件在打包时包含进去。
+在 /app 目录下创建一个叫做 list-item.html 的新文件，内容如下。它是简单的 HTML 表格，其中的字段是为了手机产品细节。更新 webpack 配置将文件在打包时包含进去。
 
 `webpack.config.js`
 
@@ -888,7 +888,7 @@ new CopyWebpackPlugin([
 
 添加到 webpack 配置后重启前端服务器。
 
-如果一切设置正确，访问 http://localhost:8081/list-item.html 应该可以如下内容
+如果一切设置正确，访问 http://localhost:8080/list-item.html 应该可以如下内容
 
 ![](./images/list-product.png)
 
@@ -1008,9 +1008,9 @@ new CopyWebpackPlugin([
 
 让我们实现上传产品图片和描述文本到 IPFS 必要的函数。
 
-Line 5 - 9: 当用户点击 html 中的 file 字段并选择一个文件上传时，触发change() 事件。如右侧所示将图片内容读取到一个缓冲区。
+Line 5 - 9: 当用户点击 html 中的 file 字段并选择一个文件上传时，触发change() 事件。如下面所示将图片内容读取到一个缓冲区。
 
-Line 11 - 23: 我们使用 JavaScript ipfs 库将图片上传到 IPFS。我们已经在 app.js 初始化了 ipfs 对象。我们使用 ipfs.add 函数将文件上传到 IPFS。将这个调用封装在一个 promise 中，以便于当我们调用 saveImageOnIpfs（见下一节），可以等待上传完毕然后执行其他操作。
+Line 11 - 23: 我们使用 JavaScript ipfs 库将图片上传到 IPFS。我们已经在 index.js 初始化了 ipfs 对象。我们使用 ipfs.add 函数将文件上传到 IPFS。将这个调用封装在一个 promise 中，以便于当我们调用 saveImageOnIpfs（见下一节），可以等待上传完毕然后执行其他操作。
 
 Line 24 - 36: 与上传图片类似，将产品介绍上传到 IPFS。
 
@@ -1067,7 +1067,7 @@ function saveTextBlobOnIpfs(blob) {
 - 1, 调用函数将图片上传到 IPFS。
 - 2, 一旦图片上传完毕，继续上传产品介绍。
 - 3, 最后，将所上传资源的哈希截图，调用合约函数将所有细节保存到区块链。
-- 4, 将代码添加到 app.js 并保存。
+- 4, 将代码添加到 index.js 并保存。
 
 现在，填充表单里的所有文本框，并点击 submit 按钮。你的产品已经保存到区块链了！你可以从 truffle 控制台检查 productIndex 的值是否已经加 1。你也可以访问 http://localhost:5001/webui ，点击文件你应该能够看到上传到 IPFS 的图片和描述信息。
 
@@ -1124,7 +1124,7 @@ function saveProductToBlockchain(params, imageId, descId) {
 
 ## 6.1，产品 HTML
 
-在这一章，我们会实现在单独页面渲染每个产品的功能。除了仅仅显示产品细节，我们也会实现出价和揭示出价的功能。在 /app 目录下创建一个叫做 product.html 的文件，内容在右侧。这是另一个简单的 HTML 文件，它有显示产品细节的占位符。我们也创建了两个表单，一个用于出价，另一个用于揭示出价。
+在这一章，我们会实现在单独页面渲染每个产品的功能。除了仅仅显示产品细节，我们也会实现出价和揭示出价的功能。在 /app 目录下创建一个叫做 product.html 的文件，内容已在下方列出。这是另一个简单的 HTML 文件，它有显示产品细节的占位符。我们也创建了两个表单，一个用于出价，另一个用于揭示出价。
 
 Bid Form: 出价单有三个文本框，分别输入出价数量，secret 字符串和要发送的数量。
 
@@ -1200,16 +1200,16 @@ Reveal Form: 为了揭示出价，我们需要用户输入出价数量和 secret
 
 ## 6.2, 产品 JS
 
-### 更新 app.js
+### 更新 index.js
 
-如果你对 JavaScript 不太熟悉的话，右侧代码可能会显得比较复杂。让我们来分解一下，理解这些代码做了些什么
+如果你对 JavaScript 不太熟悉的话，下面的代码可能会显得比较复杂。让我们来分解一下，理解这些代码做了些什么
 
 - 1, 为了保持代码简洁，对这三个页面我们都用了同一个 app.js。if($("#product-details").length > 0) 仅是用于检查我们是否在产品细节的页面，如果在，调用 renderProductDetails 函数渲染产品细节。
 - 2, 当我们访问 product.html 页面时，我们将一个请求参数 id=productId 包含在了 url 里面。我们用这个参数从区块链获取产品。
 - 3, 我们可以轻松地调用合约的 getProduct 获取产品细节。我们已经有了所存储的产品图片和描述信息的 IPFS 哈希。只需要用哈希即可渲染图片。但是对于描述信息，我们并不是使用一个指向描述信息的 iframe 或链接，而是使用 IPFS cat 命令来输出我们存储的描述文件的内容，然后显示在我们的 HTML 文件。
 - 4, 我们也定义了几个帮助函数，用于帮助显示更简洁。
 
-`app.js`
+`index.js`
 
 ```js
   // This if block should be with in the window.App = {} function
@@ -1290,7 +1290,7 @@ function displayEndHours(seconds) {
 
 在上一节，我们已经加入了显示基于两个表单（出价或是揭示出价）之一的拍卖结束时间的逻辑。定义出价和揭示出价如何处理。这些合约调用在之前的 truffle 控制台我们已经用过，我们仅需要拷贝到 这里的 JavaScript 文件即可。
 
-如右侧所示，记得将所有的 handler 加到 start: function() { } 里面。
+如下所示，记得将所有的 handler 加到 start: function() { } 里面。
 
 ### 练习
 
@@ -1378,7 +1378,7 @@ $("#revealing").submit(function(event) {
 
 ## 7.2, 托管合约
 
-右侧就是整个合约。尝试在参考右侧代码的情况下，按照以下步骤自主实现合约。
+下面给出了整个合约。尝试在参考下面代码的情况下，按照以下步骤自主实现合约。
 
 - 1, 创建一个叫做 Escrow 的合约，参数为买方，卖方，任意第三者和产品 id。买方，卖方和第三方实际上都是以太坊地址。
 - 2, 我们必须跟踪所有的参与者，谁同意释放资金给卖家，谁同意返回资金给买家。所以，分别创建一个地址到布尔型的 mapping ，叫做 releaseAmount，另一个为 refundAmount 的 mapping。
@@ -1461,7 +1461,7 @@ contract Escrow {
 - 1, 拍卖由仲裁人结束。当结束时，我们创建有仲裁人，买方和卖方的托管合约（上一节我们已经实现了该合约），并将资金转移到合约。
 - 2, 记住我们只能向买方收取第二高的出价费用。所以，我们需要将差额归还给赢家。
 
-向 app.js 添加一个结束拍卖的功能。并且检查产品状态，显示结束拍卖的按钮。
+向 index.js 添加一个结束拍卖的功能。并且检查产品状态，显示结束拍卖的按钮。
 
 `product.html`
 
@@ -1515,7 +1515,7 @@ function finalizeAuction(uint _productId) public {
 }
 ```
 
-`app.js`
+`index.js`
 
 ```js
 $("#finalize-auction").submit(function(event) {
@@ -1594,7 +1594,7 @@ function refundAmountToBuyer(uint _productId) public {
 }
 ```
 
-`app.js`
+`index.js`
 
 If product status is "Sold", show the escrow information. Replace the line  $("#product-status").html("Product sold"); with the below line to display the auction results.
 
@@ -1709,7 +1709,7 @@ $ npm install
 
 ## 8.3，产品定义
 
-当使用 Mongoose 时，我们必须定义一个打算在 MongoDB 数据库中存储的实体的 schema。在我们的案例中，我们是在数据库中存储和查询产品。让我们给产品添加一个 schema，内容就是我们在 contract struct 里面的信息。如右侧所示，在你的项目目录下创建一个叫做 product.js 的文件。
+当使用 Mongoose 时，我们必须定义一个打算在 MongoDB 数据库中存储的实体的 schema。在我们的案例中，我们是在数据库中存储和查询产品。让我们给产品添加一个 schema，内容就是我们在 contract struct 里面的信息。如下所示，在你的项目目录下创建一个叫做 product.js 的文件。
 
 `product.js`
 
@@ -1745,7 +1745,7 @@ module.exports = ProductModel;
 
 让我们创建一个简单的服务器，并检查 Expressjs 和 Nodemon 是否正常工作。
 
-在项目目录创建一个叫做 server.js 的文件，并将右侧内容拷贝到里面。代码初始化并创建了一个 ExpressJS 应用，它会在 3000 端口开始监听请求。实现一个返回字符串的简单的 GET 请求。通过 nodemon 启动服务器并访问 localhost:3000，你应该能够看到页面上有个 “Hello, World!”。如果看到了你新的字符串，就说明 nodemon 正常工作！
+在项目目录创建一个叫做 server.js 的文件，并写入下面的内容。代码初始化并创建了一个 ExpressJS 应用，它会在 3000 端口开始监听请求。实现一个返回字符串的简单的 GET 请求。通过 nodemon 启动服务器并访问 localhost:3000，你应该能够看到页面上有个 “Hello, World!”。如果看到了你新的字符串，就说明 nodemon 正常工作！
 
 `package.json`
 
@@ -1789,9 +1789,9 @@ $ node_modules/.bin/nodemon server.js
 
 事件可以认为是，当合约的状态改变时，由合约触发的通知或日志记录。所有的编程语言都有日志功能。将日志加入到代码是为了在运行时理解代码状态和数据。大多情况下，你的日志数据会被写入到一个文件或是某个数据库。比如，在 JavaScript 中，如果代码里有 console.log(product.name)，当该代码运行时，控制台就是通过日志记录 product name。
 
-在 Solidity 中，你可以用时间做同样的事情。但是，Solidity 事件的其中一个特性是，事件被永久存储在交易日志中，这是区块链里面一个特殊的数据结构。它们可以在任何时候通过合约外部进行查询，也就是说，如果你想的话，合约一年之前触发的事件你都可以查得到！关于 solidity 事件的更多内容可以查看 这里。
+在 Solidity 中，你可以用时间做同样的事情。但是，Solidity 事件的其中一个特性是，事件被永久存储在交易日志中，这是区块链里面一个特殊的数据结构。它们可以在任何时候通过合约外部进行查询，也就是说，如果你想的话，合约一年之前触发的事件你都可以查得到！
 
-右侧可以看到如何创建和利用事件的。
+下面的代码中可以看到如何创建和利用事件的。
 
 `Declare Event`
 
@@ -1953,13 +1953,13 @@ function saveProduct(product) {
 
 ## 8.7, 浏览商品
 
-如果你能够成功地插入到数据库，让我们来更新 app.js，使其通过查询数据库而不是区块链来渲染 index.html 中的商品。
+如果你能够成功地插入到数据库，让我们来更新 index.js，使其通过查询数据库而不是区块链来渲染 index.html 中的商品。
 
 练习
 
 更多商品细节页面的代码，使其通过查询 MongoDB 而不是区块链来获取一个产品的 ID ，并渲染页面。
 
-`app.js`
+`index.js`
 
 ```js
 const offchainServer = "http://localhost:3000";
@@ -2040,11 +2040,11 @@ app.get('/products', function(req, res) {
 
 如果你想要将应用托管在一个 web 服务器以便于全世界的人都可以接入，按照以下步骤。下面假设你的用户会使用 metamask 与你的 dapp 进行交互：
 
-- 1，不必运行你自己的 IPFS 节点，你可以使用像 Infura 这样的免费托管服务。在你的 app.js 中，将 IPFS 的配置从 localhost 替换为 Infura。 
+- 1，不必运行你自己的 IPFS 节点，你可以使用像 Infura 这样的免费托管服务。在你的 index.js 中，将 IPFS 的配置从 localhost 替换为 Infura。 
 ```js
 const ipfs = ipfsAPI({host: 'ipfs.infura.io', port: '5001', protocol: 'http'})
 ```
-- 2，可能会有一些没有 metamask 的用户访问你的网站。这时不要什么都不显示，至少将产品显示出来。为此，我们再次使用 infura 托管的以太坊节点，而不是使用我们自己的节点。为此，在 Infura 上免费注册。注册好后，你应该会有一个 API key。用这个 API key 更新 app.js 里面的 web3 provider，将其从 localhost 更新为 Infura 的服务器，就像下面这样
+- 2，可能会有一些没有 metamask 的用户访问你的网站。这时不要什么都不显示，至少将产品显示出来。为此，我们再次使用 infura 托管的以太坊节点，而不是使用我们自己的节点。为此，在 Infura 上免费注册。注册好后，你应该会有一个 API key。用这个 API key 更新 index.js 里面的 web3 provider，将其从 localhost 更新为 Infura 的服务器，就像下面这样
 ```js
 window.web3 = new Web3(new Web3.providers.HttpProvider("https://ropsten.infura.io/API_KEY"));
 ```
