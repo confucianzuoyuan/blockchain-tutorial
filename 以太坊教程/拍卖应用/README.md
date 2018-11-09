@@ -974,13 +974,13 @@ new CopyWebpackPlugin([
       </div>
      </div>
      <div class="form-group">
-      <label for="product-price" class="col-sm-2 control-label">Auction Start Time</label>
+      <label for="product-auction-start" class="col-sm-2 control-label">Auction Start Time</label>
       <div class="col-sm-10">
        <input type="datetime-local" class="form-control" name="product-auction-start" id="product-auction-start" required="required"></input>
       </div>
      </div>
      <div class="form-group">
-      <label for="product-price" class="col-sm-2 control-label">Days to run the auction</label>
+      <label for="product-auction-end" class="col-sm-2 control-label">Days to run the auction</label>
       <div class="col-sm-10">
        <select class="form-control" name="product-auction-end" id="product-auction-end">
         <option>1</option>
