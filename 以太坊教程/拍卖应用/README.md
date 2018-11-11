@@ -1292,13 +1292,6 @@ function displayEndHours(seconds) {
 
 如下所示，记得将所有的 handler 加到 start: function() { } 里面。
 
-### 练习
-
-- 1, 在揭示出价部分，我们仅仅显示了一条刚刚公开出价的信息。改进代码，显示最高出价者的信息，同时显示他们的出价是否领先，或是已经输掉了拍卖。
-- 2, 在 product details 页面加入一个新的 section，列出到目前为止所有已经揭示的出价及其数量。
-- 3, 显示接收到的出价总数，以及已经揭示的出价总数。
-
-下面定义的 handler 应该放在 start 函数里面。
 
 ```js
 window.App = {
@@ -1317,7 +1310,7 @@ window.App = {
 };
 ```
 
-`Place Bid`
+`提交竞价`
 
 ```js
 $("#bidding").submit(function(event) {
@@ -1341,7 +1334,7 @@ $("#bidding").submit(function(event) {
 });
 ```
 
-`Reveal Bid`
+`揭示报价`
 
 ```js
 $("#revealing").submit(function(event) {
@@ -1361,6 +1354,13 @@ $("#revealing").submit(function(event) {
    event.preventDefault();
 });
 ```
+
+### 练习
+
+- 1, 在揭示出价部分，我们仅仅显示了一条刚刚公开出价的信息。改进代码，显示最高出价者的信息，同时显示他们的出价是否领先，或是已经输掉了拍卖。
+- 2, 在 product details 页面加入一个新的 section，列出到目前为止所有已经揭示的出价及其数量。
+- 3, 显示接收到的出价总数，以及已经揭示的出价总数。
+
 
 # 7, 托管服务
 
