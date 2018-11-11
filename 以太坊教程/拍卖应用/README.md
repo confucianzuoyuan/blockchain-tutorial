@@ -1415,7 +1415,7 @@ contract Escrow {
   arbiter = _arbiter;
   amount = msg.value;
   fundsDisbursed = false;
-  CreateEscrow(_productId, _buyer, _seller, _arbiter);
+  emit CreateEscrow(_productId, _buyer, _seller, _arbiter);
  }
 
  function escrowInfo() view public returns (address, address, address, bool, uint, uint) {
@@ -1427,13 +1427,13 @@ contract Escrow {
   if ((caller == buyer || caller == seller || caller == arbiter) && releaseAmount[caller] != true) {
    releaseAmount[caller] = true;
    releaseCount += 1;
-   UnlockAmount(productId, "release", caller);
+   emit UnlockAmount(productId, "release", caller);
   }
 
   if (releaseCount == 2) {
    seller.transfer(amount);
    fundsDisbursed = true;
-   DisburseAmount(productId, amount, seller);
+   emit DisburseAmount(productId, amount, seller);
   }
  }
 
@@ -1442,13 +1442,13 @@ contract Escrow {
   if ((caller == buyer || caller == seller || caller == arbiter) && refundAmount[caller] != true) {
    refundAmount[caller] = true;
    refundCount += 1;
-   UnlockAmount(productId, "refund", caller);
+   emit UnlockAmount(productId, "refund", caller);
   }
 
   if (refundCount == 2) {
    buyer.transfer(amount);
    fundsDisbursed = true;
-   DisburseAmount(productId, amount, buyer);
+   emit DisburseAmount(productId, amount, buyer);
   }
  }
 }
