@@ -1795,7 +1795,7 @@ $ node_modules/.bin/nodemon server.js
 
 `Declare Event`
 
-Before using an event, you first declare the Event signature in your contract like this:
+在使用事件之前，需要在合约中声明事件，如下所示：
 
 ```js
  event NewProduct(uint _productId, string _name, string _category, string _imageLink, string _descLink,
@@ -1804,15 +1804,15 @@ Before using an event, you first declare the Event signature in your contract li
 
 `Trigger Event`
 
-In your code, when you want to fire an event, you trigger it like below:
+在合约代码中，用以下的方式触发一个事件：
 
 ```js
-  NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
+  emit NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
 ```
 
 `Watch Event`
 
-You can then watch for Events and take action (in our case read the contents and insert in to the database)
+这样我们就可以在 js 中监听事件，并进行相应的处理了。在我们的例子中，会读取事件中的信息，并存入数据库中。
 
 ```js
  EcommerceStore.deployed().then(function(i) {
@@ -1874,7 +1874,7 @@ event NewProduct(uint _productId, string _name, string _category, string _imageL
 function addProductToStore(string _name, string _category, string _imageLink, string _descLink, uint _auctionStartTime, uint _auctionEndTime, uint _startPrice, uint _productCondition) {
 .....
 .....
-  NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
+  emit NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
 }
 ```
 
