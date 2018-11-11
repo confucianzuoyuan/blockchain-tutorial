@@ -1329,7 +1329,7 @@ $("#bidding").submit(function(event) {
    let productId = $("#product-id").val();
    console.log(sealedBid + " for " + productId);
    EcommerceStore.deployed().then(function(i) {
-    i.bid(parseInt(productId), sealedBid, {value: web3.toWei(sendAmount), from: web3.eth.accounts[1], gas: 440000}).then(
+    i.bid(parseInt(productId), sealedBid, {value: web3.toWei(sendAmount), from: web3.eth.accounts[0], gas: 440000}).then(
      function(f) {
       $("#msg").html("Your bid has been successfully submitted!");
       $("#msg").show();
@@ -1350,7 +1350,7 @@ $("#revealing").submit(function(event) {
    let secretText = $("#reveal-secret-text").val();
    let productId = $("#product-id").val();
    EcommerceStore.deployed().then(function(i) {
-    i.revealBid(parseInt(productId), web3.toWei(amount).toString(), secretText, {from: web3.eth.accounts[1], gas: 440000}).then(
+    i.revealBid(parseInt(productId), web3.toWei(amount).toString(), secretText, {from: web3.eth.accounts[0], gas: 440000}).then(
      function(f) {
       $("#msg").show();
       $("#msg").html("Your bid has been successfully revealed!");
@@ -1506,11 +1506,11 @@ function finalizeAuction(uint _productId) public {
 
  }
 
- function escrowAddressForProduct(uint _productId) view public returns (address) {
+ function escrowAddressForProduct(uint _productId) public view returns (address) {
  return productEscrow[_productId];
  }
 
- function escrowInfo(uint _productId) view public returns (address, address, address, bool, uint, uint) {
+ function escrowInfo(uint _productId) public view returns (address, address, address, bool, uint, uint) {
  return Escrow(productEscrow[_productId]).escrowInfo();
 }
 ```
@@ -1522,7 +1522,7 @@ $("#finalize-auction").submit(function(event) {
   $("#msg").hide();
   let productId = $("#product-id").val();
   EcommerceStore.deployed().then(function(i) {
-  i.finalizeAuction(parseInt(productId), {from: web3.eth.accounts[2], gas: 4400000}).then(
+  i.finalizeAuction(parseInt(productId), {from: web3.eth.accounts[0], gas: 4400000}).then(
    function(f) {
    $("#msg").show();
    $("#msg").html("The auction has been finalized and winner declared.");
@@ -1539,7 +1539,7 @@ $("#finalize-auction").submit(function(event) {
 });
 ```
 
-`Updated renderProductDetails function`
+`更新 renderProductDetails 函数`
 
 ```js
 function renderProductDetails(productId) {
@@ -1557,7 +1557,7 @@ function renderProductDetails(productId) {
 
   $("#product-image").append("<img src='https://ipfs.io/ipfs/" + p[3] + "' width='250px' />");
   $("#product-price").html(displayPrice(p[7]));
-  $("#product-name").html(p[1].name);
+  $("#product-name").html(p[1]);
   $("#product-auction-end").html(displayEndHours(p[6]));
   $("#product-id").val(p[0]);
   $("#revealing, #bidding, #finalize-auction, #escrow-info").hide();
@@ -1596,7 +1596,7 @@ function refundAmountToBuyer(uint _productId) public {
 
 `index.js`
 
-If product status is "Sold", show the escrow information. Replace the line  $("#product-status").html("Product sold"); with the below line to display the auction results.
+如果商品状态是已售出（"Sold"）, 那么就显示托管信息。将 index.js 中的 $("#product-status").html("Product sold"); 一句替换为下面所示的代码，用来显示竞拍的结果。
 
 ```js
   if (parseInt(p[8]) == 1) {
@@ -1626,7 +1626,7 @@ If product status is "Sold", show the escrow information. Replace the line  $("#
   }
 ```
 
-Also add the handlers to release or refund the funds
+同样，需要添加一个 handler 用来释放或者退回竞拍金额。
 
 ```js
 $("#release-funds").click(function() {
@@ -1661,7 +1661,7 @@ $("#refund-funds").click(function() {
 
 `product.html`
 
-Add the following elements to display the escrow information
+在 html 中加上下面的元素，用来显示托管信息。
 
 ```html
 <div id="product-status"></div>
