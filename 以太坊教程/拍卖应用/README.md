@@ -1233,7 +1233,7 @@ function renderProductDetails(productId) {
 
    $("#product-image").append("<img src='https://ipfs.io/ipfs/" + p[3] + "' width='250px' />");
    $("#product-price").html(displayPrice(p[7]));
-   $("#product-name").html(p[1].name);
+   $("#product-name").html(p[1]);
    $("#product-auction-end").html(displayEndHours(p[6]));
    $("#product-id").val(p[0]);
    $("#revealing, #bidding").hide();
