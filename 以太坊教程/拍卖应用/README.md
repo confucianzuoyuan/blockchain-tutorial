@@ -1408,7 +1408,7 @@ contract Escrow {
  event UnlockAmount(uint _productId, string _operation, address _operator);
  event DisburseAmount(uint _productId, uint _amount, address _beneficiary);
 
- function Escrow(uint _productId, address _buyer, address _seller, address _arbiter) payable public {
+ constructor(uint _productId, address _buyer, address _seller, address _arbiter) payable public {
   productId = _productId;
   buyer = _buyer;
   seller = _seller;
