@@ -974,13 +974,13 @@ new CopyWebpackPlugin([
       </div>
      </div>
      <div class="form-group">
-      <label for="product-price" class="col-sm-2 control-label">Auction Start Time</label>
+      <label for="product-auction-start" class="col-sm-2 control-label">Auction Start Time</label>
       <div class="col-sm-10">
        <input type="datetime-local" class="form-control" name="product-auction-start" id="product-auction-start" required="required"></input>
       </div>
      </div>
      <div class="form-group">
-      <label for="product-price" class="col-sm-2 control-label">Days to run the auction</label>
+      <label for="product-auction-end" class="col-sm-2 control-label">Days to run the auction</label>
       <div class="col-sm-10">
        <select class="form-control" name="product-auction-end" id="product-auction-end">
         <option>1</option>
@@ -1233,7 +1233,7 @@ function renderProductDetails(productId) {
 
    $("#product-image").append("<img src='https://ipfs.io/ipfs/" + p[3] + "' width='250px' />");
    $("#product-price").html(displayPrice(p[7]));
-   $("#product-name").html(p[1].name);
+   $("#product-name").html(p[1]);
    $("#product-auction-end").html(displayEndHours(p[6]));
    $("#product-id").val(p[0]);
    $("#revealing, #bidding").hide();
@@ -1266,13 +1266,13 @@ function displayEndHours(seconds) {
  }
 
  let days = Math.trunc(remaining_seconds / (24*60*60));
-
- remaining_seconds -= days*24*60*60
+ remaining_seconds -= days*24*60*60;
+ 
  let hours = Math.trunc(remaining_seconds / (60*60));
-
- remaining_seconds -= hours*60*60
+ remaining_seconds -= hours*60*60;
 
  let minutes = Math.trunc(remaining_seconds / 60);
+ remaining_seconds -= minutes * 60;
 
  if (days > 0) {
   return "Auction ends in " + days + " days, " + hours + ", hours, " + minutes + " minutes";
@@ -1292,13 +1292,6 @@ function displayEndHours(seconds) {
 
 如下所示，记得将所有的 handler 加到 start: function() { } 里面。
 
-### 练习
-
-- 1, 在揭示出价部分，我们仅仅显示了一条刚刚公开出价的信息。改进代码，显示最高出价者的信息，同时显示他们的出价是否领先，或是已经输掉了拍卖。
-- 2, 在 product details 页面加入一个新的 section，列出到目前为止所有已经揭示的出价及其数量。
-- 3, 显示接收到的出价总数，以及已经揭示的出价总数。
-
-下面定义的 handler 应该放在 start 函数里面。
 
 ```js
 window.App = {
@@ -1317,7 +1310,7 @@ window.App = {
 };
 ```
 
-`Place Bid`
+`提交竞价`
 
 ```js
 $("#bidding").submit(function(event) {
@@ -1329,7 +1322,7 @@ $("#bidding").submit(function(event) {
    let productId = $("#product-id").val();
    console.log(sealedBid + " for " + productId);
    EcommerceStore.deployed().then(function(i) {
-    i.bid(parseInt(productId), sealedBid, {value: web3.toWei(sendAmount), from: web3.eth.accounts[1], gas: 440000}).then(
+    i.bid(parseInt(productId), sealedBid, {value: web3.toWei(sendAmount), from: web3.eth.accounts[0], gas: 440000}).then(
      function(f) {
       $("#msg").html("Your bid has been successfully submitted!");
       $("#msg").show();
@@ -1341,7 +1334,7 @@ $("#bidding").submit(function(event) {
 });
 ```
 
-`Reveal Bid`
+`揭示报价`
 
 ```js
 $("#revealing").submit(function(event) {
@@ -1350,7 +1343,7 @@ $("#revealing").submit(function(event) {
    let secretText = $("#reveal-secret-text").val();
    let productId = $("#product-id").val();
    EcommerceStore.deployed().then(function(i) {
-    i.revealBid(parseInt(productId), web3.toWei(amount).toString(), secretText, {from: web3.eth.accounts[1], gas: 440000}).then(
+    i.revealBid(parseInt(productId), web3.toWei(amount).toString(), secretText, {from: web3.eth.accounts[0], gas: 440000}).then(
      function(f) {
       $("#msg").show();
       $("#msg").html("Your bid has been successfully revealed!");
@@ -1361,6 +1354,13 @@ $("#revealing").submit(function(event) {
    event.preventDefault();
 });
 ```
+
+### 练习
+
+- 1, 在揭示出价部分，我们仅仅显示了一条刚刚公开出价的信息。改进代码，显示最高出价者的信息，同时显示他们的出价是否领先，或是已经输掉了拍卖。
+- 2, 在 product details 页面加入一个新的 section，列出到目前为止所有已经揭示的出价及其数量。
+- 3, 显示接收到的出价总数，以及已经揭示的出价总数。
+
 
 # 7, 托管服务
 
@@ -1408,14 +1408,14 @@ contract Escrow {
  event UnlockAmount(uint _productId, string _operation, address _operator);
  event DisburseAmount(uint _productId, uint _amount, address _beneficiary);
 
- function Escrow(uint _productId, address _buyer, address _seller, address _arbiter) payable public {
+ constructor(uint _productId, address _buyer, address _seller, address _arbiter) payable public {
   productId = _productId;
   buyer = _buyer;
   seller = _seller;
   arbiter = _arbiter;
   amount = msg.value;
   fundsDisbursed = false;
-  CreateEscrow(_productId, _buyer, _seller, _arbiter);
+  emit CreateEscrow(_productId, _buyer, _seller, _arbiter);
  }
 
  function escrowInfo() view public returns (address, address, address, bool, uint, uint) {
@@ -1427,13 +1427,13 @@ contract Escrow {
   if ((caller == buyer || caller == seller || caller == arbiter) && releaseAmount[caller] != true) {
    releaseAmount[caller] = true;
    releaseCount += 1;
-   UnlockAmount(productId, "release", caller);
+   emit UnlockAmount(productId, "release", caller);
   }
 
   if (releaseCount == 2) {
    seller.transfer(amount);
    fundsDisbursed = true;
-   DisburseAmount(productId, amount, seller);
+   emit DisburseAmount(productId, amount, seller);
   }
  }
 
@@ -1442,13 +1442,13 @@ contract Escrow {
   if ((caller == buyer || caller == seller || caller == arbiter) && refundAmount[caller] != true) {
    refundAmount[caller] = true;
    refundCount += 1;
-   UnlockAmount(productId, "refund", caller);
+   emit UnlockAmount(productId, "refund", caller);
   }
 
   if (refundCount == 2) {
    buyer.transfer(amount);
    fundsDisbursed = true;
-   DisburseAmount(productId, amount, buyer);
+   emit DisburseAmount(productId, amount, buyer);
   }
  }
 }
@@ -1506,11 +1506,11 @@ function finalizeAuction(uint _productId) public {
 
  }
 
- function escrowAddressForProduct(uint _productId) view public returns (address) {
+ function escrowAddressForProduct(uint _productId) public view returns (address) {
  return productEscrow[_productId];
  }
 
- function escrowInfo(uint _productId) view public returns (address, address, address, bool, uint, uint) {
+ function escrowInfo(uint _productId) public view returns (address, address, address, bool, uint, uint) {
  return Escrow(productEscrow[_productId]).escrowInfo();
 }
 ```
@@ -1522,7 +1522,7 @@ $("#finalize-auction").submit(function(event) {
   $("#msg").hide();
   let productId = $("#product-id").val();
   EcommerceStore.deployed().then(function(i) {
-  i.finalizeAuction(parseInt(productId), {from: web3.eth.accounts[2], gas: 4400000}).then(
+  i.finalizeAuction(parseInt(productId), {from: web3.eth.accounts[0], gas: 4400000}).then(
    function(f) {
    $("#msg").show();
    $("#msg").html("The auction has been finalized and winner declared.");
@@ -1539,7 +1539,7 @@ $("#finalize-auction").submit(function(event) {
 });
 ```
 
-`Updated renderProductDetails function`
+`更新 renderProductDetails 函数`
 
 ```js
 function renderProductDetails(productId) {
@@ -1557,7 +1557,7 @@ function renderProductDetails(productId) {
 
   $("#product-image").append("<img src='https://ipfs.io/ipfs/" + p[3] + "' width='250px' />");
   $("#product-price").html(displayPrice(p[7]));
-  $("#product-name").html(p[1].name);
+  $("#product-name").html(p[1]);
   $("#product-auction-end").html(displayEndHours(p[6]));
   $("#product-id").val(p[0]);
   $("#revealing, #bidding, #finalize-auction, #escrow-info").hide();
@@ -1596,7 +1596,7 @@ function refundAmountToBuyer(uint _productId) public {
 
 `index.js`
 
-If product status is "Sold", show the escrow information. Replace the line  $("#product-status").html("Product sold"); with the below line to display the auction results.
+如果商品状态是已售出（"Sold"）, 那么就显示托管信息。将 index.js 中的 $("#product-status").html("Product sold"); 一句替换为下面所示的代码，用来显示竞拍的结果。
 
 ```js
   if (parseInt(p[8]) == 1) {
@@ -1626,7 +1626,7 @@ If product status is "Sold", show the escrow information. Replace the line  $("#
   }
 ```
 
-Also add the handlers to release or refund the funds
+同样，需要添加一个 handler 用来释放或者退回竞拍金额。
 
 ```js
 $("#release-funds").click(function() {
@@ -1661,7 +1661,7 @@ $("#refund-funds").click(function() {
 
 `product.html`
 
-Add the following elements to display the escrow information
+在 html 中加上下面的元素，用来显示托管信息。
 
 ```html
 <div id="product-status"></div>
@@ -1795,7 +1795,7 @@ $ node_modules/.bin/nodemon server.js
 
 `Declare Event`
 
-Before using an event, you first declare the Event signature in your contract like this:
+在使用事件之前，需要在合约中声明事件，如下所示：
 
 ```js
  event NewProduct(uint _productId, string _name, string _category, string _imageLink, string _descLink,
@@ -1804,15 +1804,15 @@ Before using an event, you first declare the Event signature in your contract li
 
 `Trigger Event`
 
-In your code, when you want to fire an event, you trigger it like below:
+在合约代码中，用以下的方式触发一个事件：
 
 ```js
-  NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
+  emit NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
 ```
 
 `Watch Event`
 
-You can then watch for Events and take action (in our case read the contents and insert in to the database)
+这样我们就可以在 js 中监听事件，并进行相应的处理了。在我们的例子中，会读取事件中的信息，并存入数据库中。
 
 ```js
  EcommerceStore.deployed().then(function(i) {
@@ -1874,7 +1874,7 @@ event NewProduct(uint _productId, string _name, string _category, string _imageL
 function addProductToStore(string _name, string _category, string _imageLink, string _descLink, uint _auctionStartTime, uint _auctionEndTime, uint _startPrice, uint _productCondition) {
 .....
 .....
-  NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
+  emit NewProduct(productIndex, _name, _category, _imageLink, _descLink, _auctionStartTime, _auctionEndTime, _startPrice, _productCondition);
 }
 ```
 
