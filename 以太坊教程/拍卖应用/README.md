@@ -1266,13 +1266,13 @@ function displayEndHours(seconds) {
  }
 
  let days = Math.trunc(remaining_seconds / (24*60*60));
-
- remaining_seconds -= days*24*60*60
+ remaining_seconds -= days*24*60*60;
+ 
  let hours = Math.trunc(remaining_seconds / (60*60));
-
- remaining_seconds -= hours*60*60
+ remaining_seconds -= hours*60*60;
 
  let minutes = Math.trunc(remaining_seconds / 60);
+ remaining_time -= minutes * 60;
 
  if (days > 0) {
   return "Auction ends in " + days + " days, " + hours + ", hours, " + minutes + " minutes";
