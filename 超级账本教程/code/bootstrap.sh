@@ -1,46 +1,17 @@
 #!/bin/bash
-#
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
 
 # if version not passed in, default to latest released version
-# 我们使用fabric 1.3.0
 export VERSION=1.3.0
 # if ca version not passed in, default to latest released version
-# fabric-ca的版本也是1.3.0
 export CA_VERSION=$VERSION
 # current version of thirdparty images (couchdb, kafka and zookeeper) released
-# 第三方镜像的版本为0.4.13
 export THIRDPARTY_IMAGE_VERSION=0.4.13
-# 以下变量获取了当前操作系统的类型：linux_amd64还是darwin/x86_64。
 export ARCH=$(echo "$(uname -s|tr '[:upper:]' '[:lower:]'|sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')")
-# 以下变量获取了操作系统的位数如x86_64。
 export MARCH=$(uname -m)
 
-# 帮助信息
-printHelp() {
-  echo "Usage: bootstrap.sh [version [ca_version [thirdparty_version]]] [options]"
-  echo
-  echo "options:"
-  echo "-h : this help"
-  # -d: 忽略docker镜像的安装
-  echo "-d : bypass docker image download"
-  # -s: 忽略官方示例的安装
-  echo "-s : bypass fabric-samples repo clone"
-  # -b: 忽略可执行文件的下载
-  echo "-b : bypass download of platform-specific binaries"
-  echo
-  echo "e.g. bootstrap.sh 1.3.0 -s"
-  echo "would download docker images and binaries for version 1.3.0"
-}
+export FABRIC_TAG=$VERSION
+export CA_TAG=$VERSION
 
-# 拉取Fabric的镜像：peer, orderer, ccenv, javaenv, tools
-# peer: 节点
-# orderer: 排序节点
-# ccenv, javaenv: 执行环境
-# tools: 工具
 dockerFabricPull() {
   local FABRIC_TAG=$1
   for IMAGES in peer orderer ccenv javaenv tools; do
@@ -51,7 +22,6 @@ dockerFabricPull() {
   done
 }
 
-# 下载第三方镜像: couchdb, kafka, zookeeper。
 dockerThirdPartyImagesPull() {
   local THIRDPARTY_TAG=$1
   for IMAGES in couchdb kafka zookeeper; do
@@ -62,7 +32,6 @@ dockerThirdPartyImagesPull() {
   done
 }
 
-# 下载fabric-ca镜像，用于处理一些和数字证书有关的东西。
 dockerCaPull() {
       local CA_TAG=$1
       echo "==> FABRIC CA IMAGE"
@@ -71,104 +40,6 @@ dockerCaPull() {
       docker tag hyperledger/fabric-ca:$CA_TAG hyperledger/fabric-ca
 }
 
-# 下载官方示例。
-samplesInstall() {
-  # clone (if needed) hyperledger/fabric-samples and checkout corresponding
-  # version to the binaries and docker images to be downloaded
-  if [ -d first-network ]; then
-    # if we are in the fabric-samples repo, checkout corresponding version
-    echo "===> Checking out v${VERSION} of hyperledger/fabric-samples"
-    git checkout v${VERSION}
-  elif [ -d fabric-samples ]; then
-    # if fabric-samples repo already cloned and in current directory,
-    # cd fabric-samples and checkout corresponding version
-    echo "===> Checking out v${VERSION} of hyperledger/fabric-samples"
-    cd fabric-samples && git checkout v${VERSION}
-  else
-    echo "===> Cloning hyperledger/fabric-samples repo and checkout v${VERSION}"
-    git clone -b master https://github.com/hyperledger/fabric-samples.git && cd fabric-samples && git checkout v${VERSION}
-  fi
-}
-
-# Incrementally downloads the .tar.gz file locally first, only decompressing it
-# after the download is complete. This is slower than binaryDownload() but
-# allows the download to be resumed.
-binaryIncrementalDownload() {
-      local BINARY_FILE=$1
-      local URL=$2
-      curl -f -s -C - ${URL} -o ${BINARY_FILE} || rc=$?
-      # Due to limitations in the current Nexus repo:
-      # curl returns 33 when there's a resume attempt with no more bytes to download
-      # curl returns 2 after finishing a resumed download
-      # with -f curl returns 22 on a 404
-      if [ "$rc" = 22 ]; then
-	  # looks like the requested file doesn't actually exist so stop here
-	  return 22
-      fi
-      if [ -z "$rc" ] || [ $rc -eq 33 ] || [ $rc -eq 2 ]; then
-          # The checksum validates that RC 33 or 2 are not real failures
-          echo "==> File downloaded. Verifying the md5sum..."
-          localMd5sum=$(md5sum ${BINARY_FILE} | awk '{print $1}')
-          remoteMd5sum=$(curl -s ${URL}.md5)
-          if [ "$localMd5sum" == "$remoteMd5sum" ]; then
-              echo "==> Extracting ${BINARY_FILE}..."
-              tar xzf ./${BINARY_FILE} --overwrite
-	      echo "==> Done."
-              rm -f ${BINARY_FILE} ${BINARY_FILE}.md5
-          else
-              echo "Download failed: the local md5sum is different from the remote md5sum. Please try again."
-              rm -f ${BINARY_FILE} ${BINARY_FILE}.md5
-              exit 1
-          fi
-      else
-          echo "Failure downloading binaries (curl RC=$rc). Please try again and the download will resume from where it stopped."
-          exit 1
-      fi
-}
-
-# This will attempt to download the .tar.gz all at once, but will trigger the
-# binaryIncrementalDownload() function upon a failure, allowing for resume
-# if there are network failures.
-binaryDownload() {
-      local BINARY_FILE=$1
-      local URL=$2
-      echo "===> Downloading: " ${URL}
-      # Check if a previous failure occurred and the file was partially downloaded
-      if [ -e ${BINARY_FILE} ]; then
-          echo "==> Partial binary file found. Resuming download..."
-          binaryIncrementalDownload ${BINARY_FILE} ${URL}
-      else
-          curl ${URL} | tar xz || rc=$?
-          if [ ! -z "$rc" ]; then
-              echo "==> There was an error downloading the binary file. Switching to incremental download."
-              echo "==> Downloading file..."
-              binaryIncrementalDownload ${BINARY_FILE} ${URL}
-	  else
-	      echo "==> Done."
-          fi
-      fi
-}
-
-# 下载安装可执行文件。
-binariesInstall() {
-  echo "===> Downloading version ${FABRIC_TAG} platform specific fabric binaries"
-  binaryDownload ${BINARY_FILE} https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/${ARCH}-${VERSION}/${BINARY_FILE}
-  if [ $? -eq 22 ]; then
-     echo
-     echo "------> ${FABRIC_TAG} platform specific fabric binary is not available to download <----"
-     echo
-   fi
-
-  echo "===> Downloading version ${CA_TAG} platform specific fabric-ca-client binary"
-  binaryDownload ${CA_BINARY_FILE} https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/${ARCH}-${CA_VERSION}/${CA_BINARY_FILE}
-  if [ $? -eq 22 ]; then
-     echo
-     echo "------> ${CA_TAG} fabric-ca-client binary is not available to download  (Available from 1.1.0-rc1) <----"
-     echo
-   fi
-}
-
-# 安装docker镜像。
 dockerInstall() {
   which docker >& /dev/null
   NODOCKER=$?
@@ -189,70 +60,7 @@ dockerInstall() {
   fi
 }
 
-# 控制变量
-DOCKER=true
-SAMPLES=true
-BINARIES=true
-
-# Parse commandline args pull out
-# version and/or ca-version strings first
-if [ ! -z $1 -a ${1:0:1} != "-" ]; then
-  VERSION=$1;shift
-  if [ ! -z $1  -a ${1:0:1} != "-" ]; then
-    CA_VERSION=$1;shift
-    if [ ! -z $1  -a ${1:0:1} != "-" ]; then
-      THIRDPARTY_IMAGE_VERSION=$1;shift
-    fi
-  fi
-fi
-
-# prior to 1.2.0 architecture was determined by uname -m
-if [[ $VERSION =~ ^1\.[0-1]\.* ]]; then
-  export FABRIC_TAG=${MARCH}-${VERSION}
-  export CA_TAG=${MARCH}-${CA_VERSION}
-  export THIRDPARTY_TAG=${MARCH}-${THIRDPARTY_IMAGE_VERSION}
-else
-  # starting with 1.2.0, multi-arch images will be default
-  : ${CA_TAG:="$CA_VERSION"}
-  : ${FABRIC_TAG:="$VERSION"}
-  : ${THIRDPARTY_TAG:="$THIRDPARTY_IMAGE_VERSION"}
-fi
-
-BINARY_FILE=hyperledger-fabric-${ARCH}-${VERSION}.tar.gz
-CA_BINARY_FILE=hyperledger-fabric-ca-${ARCH}-${CA_VERSION}.tar.gz
-
-# then parse opts
-while getopts "h?dsb" opt; do
-  case "$opt" in
-    h|\?)
-      printHelp
-      exit 0
-    ;;
-    d)  DOCKER=false
-    ;;
-    s)  SAMPLES=false
-    ;;
-    b)  BINARIES=false
-    ;;
-  esac
-done
-
-# 调用前面定义的各种shell函数，执行脚本
-if [ "$SAMPLES" == "true" ]; then
-  echo
-  echo "Installing hyperledger/fabric-samples repo"
-  echo
-  samplesInstall
-fi
-if [ "$BINARIES" == "true" ]; then
-  echo
-  echo "Installing Hyperledger Fabric binaries"
-  echo
-  binariesInstall
-fi
-if [ "$DOCKER" == "true" ]; then
-  echo
-  echo "Installing Hyperledger Fabric docker images"
-  echo
-  dockerInstall
-fi
+echo
+echo "Installing Hyperledger Fabric docker images"
+echo
+dockerInstall

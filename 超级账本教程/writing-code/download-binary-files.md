@@ -1,0 +1,27 @@
+首先创建项目文件夹
+
+```sh
+$ mkdir fabric-projects
+$ cd fabric-projects
+```
+
+然后下载可执行文件。
+
+```sh
+$ wget https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/linux-amd64-1.3.0/hyperledger-fabric-linux-amd64-1.3.0.tar.gz
+```
+
+然后解压，解压出来两个文件夹`bin`, `config`。
+```sh
+$ tar -xzf 文件名
+```
+
+```sh
+$ wget https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric-ca/hyperledger-fabric-ca/linux-amd64-1.3.0/hyperledger-fabric-ca-linux-amd64-1.3.0.tar.gz
+```
+
+解压，是一个bin文件夹，将bin里的文件移到上面那个bin文件夹中去。
+
+然后删掉这两个压缩包。
+
+在code文件夹中已经提供了这两个压缩文件。
