@@ -1,0 +1,8 @@
+{
+  "env": {
+    "browser": true
+  },
+  "globals" : {
+    "web3" : true
+  }
+}

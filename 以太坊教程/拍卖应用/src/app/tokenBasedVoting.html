@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Decentralized Voting App</title>
+ <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+ <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+ <style>
+   </style>
+</head>
+<body class="row">
+ <h1 class="text-center banner">Decentralized Voting Application (Ropsten Testnet)</h1>
+ <div class="container">
+  <div class="row margin-top-3">
+   <div class="col-sm-12">
+    <h3>How to use the app</h3>
+    <strong>Step 1</strong>: Install the <a href="https://metamask.io/" target="_blank">metamask plugin</a> and create an account on Ropsten Test Network and load some Ether. DM <a href="https://twitter.com/zastrinlab" target="_blank">@zastrinlab</a> if you need test ether.
+    <br><br>
+    <strong>Step 2</strong>: Purchase tokens below by entering the total number of tokens you like to buy.
+    <br><br>
+    <strong>Step 3</strong>: Vote for candidates by entering their name and no. of tokens to vote with.
+    <br><br>
+    <strong>Step 4</strong>: Enter your account address to look up your voting activity.
+	<br><br>
+   </div>
+  </div>
+  <div class="row margin-top-3">
+   <div class="col-sm-7">
+    <h2>Candidates</h2>
+    <div class="table-responsive">
+     <table class="table table-bordered">
+      <thead>
+       <tr>
+        <th>Candidate</th>
+        <th>Votes</th>
+       </tr>
+      </thead>
+      <tbody id="candidate-rows">
+      </tbody>
+     </table>
+    </div>
+   </div>
+   <div class="col-sm-offset-1 col-sm-4">
+    <h2>Tokens</h2>
+    <div class="table-responsive">
+     <table class="table table-bordered">
+      <tr>
+       <th>Tokens Info</th>
+       <th>Value</th>
+      </tr>
+      <tr>
+       <td>Tokens For Sale</td>
+       <td id="tokens-total"></td>
+      </tr>
+      <tr>
+       <td>Tokens Sold</td>
+       <td id="tokens-sold"></td>
+      </tr>
+      <tr>
+       <td>Price Per Token</td>
+       <td id="token-cost"></td>
+      </tr>
+      <tr>
+       <td>Balance in the contract</td>
+       <td id="contract-balance"></td>
+      </tr>
+     </table>
+    </div>
+   </div>
+  </div>
+  <hr>
+  <div class="row margin-bottom-3">
+   <div class="col-sm-7 form">
+    <h2>Vote for Candidate</h2>
+    <div id="msg"></div>
+    <input type="text" id="candidate" class="form-control" placeholder="Enter the candidate name"/>
+    <br>
+    <br>
+    <input type="text" id="vote-tokens" class="form-control" placeholder="Total no. of tokens to vote"/>
+    <br>
+    <br>
+    <a href="#" onclick="voteForCandidate(); return false;" class="btn btn-primary">Vote</a>
+   </div>
+   <div class="col-sm-offset-1 col-sm-4">
+    <div class="col-sm-12 form">
+     <h2>Purchase Tokens</h2>
+     <div id="buy-msg"></div>
+     <input type="text" id="buy" class="col-sm-8" placeholder="Number of tokens to buy"/> 
+     <a href="#" onclick="buyTokens(); return false;" class="btn btn-primary">Buy</a>
+    </div>
+    <div class="col-sm-12 margin-top-3 form">
+     <h2 class="">Lookup Voter Info</h2>
+     <input type="text" id="voter-info", class="col-sm-8" placeholder="Enter the voter address" /> 
+     <a href="#" onclick="lookupVoterInfo(); return false;" class="btn btn-primary">Lookup</a>
+     <div class="voter-details row text-left">
+      <div id="tokens-bought" class="margin-top-3 col-md-12"></div>
+      <div id="votes-cast" class="col-md-12"></div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+<script src="app.js"></script>
+</html>
