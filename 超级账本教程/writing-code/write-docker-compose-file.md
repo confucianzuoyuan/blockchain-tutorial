@@ -236,7 +236,7 @@ services:
     command: /bin/bash
     volumes:
         - /var/run/:/host/var/run/
-        - ./../chaincode/:/opt/gopath/src/github.com/chaincode
+        - ./chaincode/:/opt/gopath/src/github.com/chaincode
         - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
         - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
@@ -247,7 +247,7 @@ services:
       - peer0.org2.atguigu.com
       - peer1.org2.atguigu.com
     networks:
-      - atguigu 
+      - atguigu
 ```
 
 编写完毕！

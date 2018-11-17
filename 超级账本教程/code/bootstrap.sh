@@ -11,6 +11,7 @@ export MARCH=$(uname -m)
 
 export FABRIC_TAG=$VERSION
 export CA_TAG=$VERSION
+export THIRDPARTY_TAG=$THIRDPARTY_IMAGE_VERSION
 
 dockerFabricPull() {
   local FABRIC_TAG=$1
