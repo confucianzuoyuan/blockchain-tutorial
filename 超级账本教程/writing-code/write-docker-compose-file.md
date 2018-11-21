@@ -13,14 +13,14 @@ $ vim docker-compose-base.yaml
 然后写入
 
 ```yaml
-version: '2'
+version: '2' # 表示用的是版本2的YAML模板
 
-services:
+services: # # 在版本2中，所有的服务都要放在services根下面
 
-  orderer.atguigu.com:
-    container_name: orderer.atguigu.com
-    image: hyperledger/fabric-orderer:$IMAGE_TAG
-    environment:
+  orderer.atguigu.com: # Orderer排序服务
+    container_name: orderer.atguigu.com # 定义容器的名称
+    image: hyperledger/fabric-orderer:$IMAGE_TAG  # 指定容器的镜像
+    environment: # 设置环境变量
       - ORDERER_GENERAL_LOGLEVEL=INFO
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
@@ -32,17 +32,17 @@ services:
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: orderer
-    volumes:
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric # 指定容器的工作目录
+    command: orderer # 容器启动后默认执行的命令
+    volumes: # 将本地文件路径映射到容器中的路径之中
     - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
     - ../crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp:/var/hyperledger/orderer/msp
     - ../crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/tls/:/var/hyperledger/orderer/tls
     - orderer.atguigu.com:/var/hyperledger/production/orderer
-    ports:
+    ports: # 暴露端口信息
       - 7050:7050
 
-  peer0.org1.atguigu.com:
+  peer0.org1.atguigu.com: # Org1的Peer0服务
     container_name: peer0.org1.atguigu.com
     extends:
       file: peer-base.yaml
@@ -62,7 +62,7 @@ services:
       - 7051:7051
       - 7053:7053
 
-  peer1.org1.atguigu.com:
+  peer1.org1.atguigu.com: # Org1的Peer1服务
     container_name: peer1.org1.atguigu.com
     extends:
       file: peer-base.yaml
@@ -148,7 +148,7 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    command: peer node start
+    command: peer node start # 容器启动之后，运行peer node start 命令开启服务
 ```
 
 然后在和base同级的目录下，创建一个新文件
@@ -156,6 +156,8 @@ services:
 ```sh
 $ vim docker-compose-cli.yaml
 ```
+
+CLI在整个Fabric网络中扮演客户端的角色，我们在开发测试的时候可以用CLI来代替SDK，执行各种SDK能执行的操作。CLI会和Peer相连，把指令发送给对应的Peer执行。
 
 在里面写入
 
@@ -172,12 +174,13 @@ volumes:
 networks:
   atguigu:
 
-services:
+services: # Service根下，是该模板文件定义的所有服务
 
   orderer.atguigu.com:
     extends:
-      file:   base/docker-compose-base.yaml
-      service: orderer.atguigu.com
+      file:   base/docker-compose-base.yaml # 进行拓展时使用的文件，可以认为是继承
+      service: orderer.atguigu.com # 进行拓展时使用的服务
+    # 以上表示使用base/docker-compose-base.yaml中的orderer.atguigu.com服务进行拓展
     container_name: orderer.atguigu.com
     networks:
       - atguigu 
@@ -217,7 +220,7 @@ services:
   cli:
     container_name: cli
     image: hyperledger/fabric-tools:$IMAGE_TAG
-    tty: true
+    tty: true # 模拟一个假的远程控制台。
     stdin_open: true
     environment:
       - GOPATH=/opt/gopath
@@ -240,7 +243,7 @@ services:
         - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
         - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
-    depends_on:
+    depends_on: # 保证服务开启的顺序
       - orderer.atguigu.com
       - peer0.org1.atguigu.com
       - peer1.org1.atguigu.com

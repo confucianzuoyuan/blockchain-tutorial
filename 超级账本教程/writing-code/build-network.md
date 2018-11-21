@@ -65,13 +65,13 @@ Organizations:
         MSPDir: crypto-config/ordererOrganizations/atguigu.com/msp # MSP相关文件所在本地路径
         # 背书策略
         Policies:
-            Readers:
+            Readers: # 读权限
                 Type: Signature
                 Rule: "OR('OrdererMSP.member')"
-            Writers:
+            Writers: # 写权限
                 Type: Signature
                 Rule: "OR('OrdererMSP.member')"
-            Admins:
+            Admins:  # 管理员权限
                 Type: Signature
                 Rule: "OR('OrdererMSP.admin')"
 
@@ -118,12 +118,12 @@ Organizations:
 
 Capabilities:
     Channel: &ChannelCapabilities
-        V1_3: true
+        V1_3: true # 通道的版本必须是1.3
 
     Orderer: &OrdererCapabilities
-        V1_1: true
+        V1_1: true # 排序节点的版本可以是1.1，之前的不行
 
-    Application: &ApplicationCapabilities
+    Application: &ApplicationCapabilities # 应用只支持1.3版本。
         V1_3: true
         V1_2: false
         V1_1: false
@@ -163,7 +163,7 @@ Orderer: &OrdererDefaults
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
 
-    Kafka:
+    Kafka: # kafka的地址
         Brokers:
             - 127.0.0.1:9092
 
@@ -195,6 +195,7 @@ Channel: &ChannelDefaults
             Rule: "MAJORITY Admins"
 
     Capabilities:
+        # &用来建立锚点，<<表示合并到当前数据，*用来引用锚点。
         <<: *ChannelCapabilities
 
 # 定义了一系列的Profile，每个Profile代表了某种应用场景下的通道配置模板，包括Orderer系统通道模板或应用通道模板，有时候也混合放到一起。
@@ -240,19 +241,27 @@ configtxgen工具用于创建四个配置工件：
 * 通道configuration transaction
 * 和两个“anchor peer transactions” - 每个对等节点的组织一个。
 
-排序节点区块是排序服务的创世区块，并且通道配置交易文件在通道创建时被广播到排序节点。 正如名称所暗示的那样，主播节点交易在此通道上指定每个组织的主播节点。
+排序节点区块是排序服务的创世区块，并且通道配置交易文件在通道创建时被广播到排序节点。正如名称所暗示的那样，主播节点交易在此通道上指定每个组织的主播节点。
 
 Configtxgen使用一个文件 - configtx.yaml - 包含示例网络的定义。有三个成员 - 一个排序节点的组织（OrdererOrg）和两个对等节点的组织（Org1和Org2），每个对等节点的组织管理和维护两个对等节点。该文件还指定了一个联盟 - SampleConsortium - 由这两个对等节点组织组成。请特别注意此文件顶部的“配置文件”部分。你会注意到我们有两个唯一的头部。一个用于排序节点创世区块 - TwoOrgsOrdererGenesis - ，一个用于我们的通道 - TwoOrgsChannel。
 
+排序节点创世区块和我们即将创建的后续工件将输出到该项目根目录的channel-artifacts目录中。
+
 # 创建通道交易的配置
+
+我们需要创建通道交易工件。请务必替换`$CHANNEL_NAME`或将`CHANNEL_NAME`设置为可在整个说明中使用的环境变量：
 
 ```sh
 $ export CHANNEL_NAME=mychannel  && ./bin/configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID $CHANNEL_NAME
 ```
 
+接下来，我们将在我们构建的通道上为Org1定义主播节点。 同样，请务必替换`$CHANNEL_NAME`或为以下命令设置环境变量。终端输出将模仿通道交易工件的输出：
+
 ```sh
 $ ./bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org1MSP
 ```
+
+现在我们将在同一个通道定义Org2的主播节点：
 
 ```sh
 $ ./bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org2MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org2MSP
@@ -288,44 +297,65 @@ export CORE_PEER_LOCALMSPID="Org1MSP"
 export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls/ca.crt
 ```
 
+接下来，我们将传递我们在创建通道配置交易中创建的生成的通道配置事务工件作为创建通道请求的一部分（我们称之为“channel.tx”）给排序节点。
+
+我们使用`-c`标志指定通道名称，使用`-f`标志指定通道配置交易。在这种情况下，它是`channel.tx`，但是你可以使用不同的名称装入自己的配置交易。我们将再次在CLI容器中设置`CHANNEL_NAME`环境变量，以便我们不必显式传递此参数。通道名称必须全部小写，长度小于250个字符，并匹配正则表达式`[a-z] [a-z0-9 .-] *`。
+
+注意我们作为此命令的一部分传递的`--cafile`。它是排序节点的根证书的本地路径，允许我们验证TLS握手。
+
+该命令返回一个创世块 - <channel-ID.block> - 我们将用它来加入通道。它包含channel.tx中指定的配置信息。如果你没有对默认通道名称进行任何修改，那么该命令将返回一个名为mychannel.block的原型。
 
 ```sh
 $ export CHANNEL_NAME=mychannel
 $ peer channel create -o orderer.atguigu.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/channel.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem
 ```
 
+现在让我们将peer0.org1.atguigu.com加入通道。
+
 ```sh
 $ peer channel join -b mychannel.block
 ```
+
+我们只需加入peer0.org2.atguigu.com，而不是加入每个对等节点，这样我们就可以正确地更新通道中的主播节点定义。由于我们将覆盖CLI容器中的默认环境变量，因此完整命令如下：
 
 ```sh
 CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/users/Admin@org2.atguigu.com/msp CORE_PEER_ADDRESS=peer0.org2.atguigu.com:7051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt peer channel join -b mychannel.block
 ```
 
+# 更新主播节点
+
+以下命令是通道更新，它们将传播到通道的定义。实质上，我们在通道的创世区块之上添加了额外的配置信息。请注意，我们不是修改genesis块，而是简单地将增量添加到将定义主播节点的链中。
+
+更新通道定义以将Org1的主播节点定义为“peer0.org1.atguigu.com”。
+
 ```sh
 peer channel update -o orderer.atguigu.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org1MSPanchors.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem
 ```
+
+现在更新通道定义，将Org2的主播节点定义为peer0.org2.atguigu.com。 与Org2对等节点的peer channel join命令相同，我们需要在此调用前加上适当的环境变量。
 
 ```sh
 CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/users/Admin@org2.atguigu.com/msp CORE_PEER_ADDRESS=peer0.org2.atguigu.com:7051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt peer channel update -o orderer.atguigu.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org2MSPanchors.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem
 ```
 
+有关chaincode
+
 ```sh
-peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/simpleasset/go/
+peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/
 ```
 
 ```sh
-peer chaincode instantiate -o orderer.atguigu.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["a", "100"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
+peer chaincode instantiate -o orderer.atguigu.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n simpleasset -v 1.0 -c '{"Args":["a", "100"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
 ```
 
 ```sh
-CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/users/Admin@org2.atguigu.com/msp CORE_PEER_ADDRESS=peer0.org2.atguigu.com:7051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/simpleasset/go/
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/users/Admin@org2.atguigu.com/msp CORE_PEER_ADDRESS=peer0.org2.atguigu.com:7051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/
 ```
 
 ```sh
-peer chaincode invoke -o orderer.atguigu.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls/ca.crt --peerAddresses peer0.org2.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt -c '{"Args":["get","a"]}'
+peer chaincode invoke -o orderer.atguigu.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n simpleasset --peerAddresses peer0.org1.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls/ca.crt --peerAddresses peer0.org2.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt -c '{"Args":["get","a"]}'
 ```
 
 ```sh
-peer chaincode invoke -o orderer.atguigu.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls/ca.crt --peerAddresses peer0.org2.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt -c '{"Args":["set","b", "300"]}'
+peer chaincode invoke -o orderer.atguigu.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n simpleasset --peerAddresses peer0.org1.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls/ca.crt --peerAddresses peer0.org2.atguigu.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt -c '{"Args":["set","b", "300"]}'
 ```

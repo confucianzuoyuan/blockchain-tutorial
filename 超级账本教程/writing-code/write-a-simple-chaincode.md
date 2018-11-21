@@ -107,17 +107,17 @@ $ docker exec -it cli bash
 ```
 
 ```sh
-$ peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/simpleasset/go/
+$ peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/
 ```
 
 ```sh
-$ peer chaincode instantiate -o orderer.atguigu.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["init","a", "100"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
+$ peer chaincode instantiate -o orderer.atguigu.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n simpleasset -v 1.0 -c '{"Args":["init","a", "100"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
 ```
 
 ```sh
-$ peer chaincode get -C $CHANNEL_NAME -n mycc -c '{"Args":["get", "a"]}'
+$ peer chaincode get -C $CHANNEL_NAME -n simpleasset -c '{"Args":["get", "a"]}'
 ```
 
 ```sh
-$ peer chaincode set -C $CHANNEL_NAME -n mycc -c '{"Args":["set", "a", "200"]}'
+$ peer chaincode set -C $CHANNEL_NAME -n simpleasset -c '{"Args":["set", "a", "200"]}'
 ```
