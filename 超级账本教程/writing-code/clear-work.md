@@ -1,0 +1,19 @@
+clear containers
+
+```sh
+$ docker rm -f $(docker ps -a)
+```
+
+rm image
+
+```sh
+$ docker rmi -f 应用的镜像id
+$ docker rm $(docker ps -aq)
+$ docker rmi $(docker images dev-* -q)
+```
+
+删除文件
+
+```sh
+$ rm -rf channel-artifacts/*.block channel-artifacts/*.tx crypto-config
+```
