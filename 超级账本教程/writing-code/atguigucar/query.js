@@ -24,13 +24,13 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
 	crypto_suite.setCryptoKeyStore(crypto_store);
 	fabric_client.setCryptoSuite(crypto_suite);
 
-	return fabric_client.getUserContext('user1', true);
+	return fabric_client.getUserContext('zuoyuan', true);
 }).then((user_from_store) => {
 	if (user_from_store && user_from_store.isEnrolled()) {
-		console.log('Successfully loaded user1 from persistence');
+		console.log('加载用户zuoyuan成功! ');
 		member_user = user_from_store;
 	} else {
-		throw new Error('Failed to get user1.... run registerUser.js');
+		throw new Error('获取用户zuoyuan失败.... 运行registerUser.js');
 	}
 
 	const request = {
