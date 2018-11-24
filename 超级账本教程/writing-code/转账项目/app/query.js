@@ -1,37 +1,22 @@
-/**
- * Copyright 2017 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-var util = require('util');
-var helper = require('./helper.js');
-var logger = helper.getLogger('Query');
+const util = require('util');
+const helper = require('./helper.js');
+const logger = helper.getLogger('Query');
 
-var queryChaincode = async function(peer, channelName, chaincodeName, args, fcn, username, org_name) {
+// 查询链代码
+const queryChaincode = async function(peer, channelName, chaincodeName, args, fcn, username, org_name) {
 	try {
-		// first setup the client for this org
 		var client = await helper.getClientForOrg(org_name, username);
 		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
 		var channel = client.getChannel(channelName);
 		if(!channel) {
-			let message = util.format('Channel %s was not defined in the connection profile', channelName);
+			let message = util.format('通道 %s 未定义', channelName);
 			logger.error(message);
 			throw new Error(message);
 		}
 
-		// send query
-		var request = {
-			targets : [peer], //queryByChaincode allows for multiple targets
+        // 构建查询请求
+		let request = {
+			targets : [peer], // 发送目标节点的列表
 			chaincodeId: chaincodeName,
 			fcn: fcn,
 			args: args
@@ -39,11 +24,11 @@ var queryChaincode = async function(peer, channelName, chaincodeName, args, fcn,
 		let response_payloads = await channel.queryByChaincode(request);
 		if (response_payloads) {
 			for (let i = 0; i < response_payloads.length; i++) {
-				logger.info(args[0]+' now has ' + response_payloads[i].toString('utf8') +
-					' after the move');
+				logger.info(args[0]+' 现在有 ' + response_payloads[i].toString('utf8') +
+					' 在转账以后');
 			}
-			return args[0]+' now has ' + response_payloads[0].toString('utf8') +
-				' after the move';
+			return args[0]+' 现在有 ' + response_payloads[0].toString('utf8') +
+				' 在转账以后';
 		} else {
 			logger.error('response_payloads is null');
 			return 'response_payloads is null';
@@ -53,9 +38,10 @@ var queryChaincode = async function(peer, channelName, chaincodeName, args, fcn,
 		return error.toString();
 	}
 };
+
+// 查询区块
 var getBlockByNumber = async function(peer, channelName, blockNumber, username, org_name) {
 	try {
-		// first setup the client for this org
 		var client = await helper.getClientForOrg(org_name, username);
 		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
 		var channel = client.getChannel(channelName);
@@ -78,9 +64,10 @@ var getBlockByNumber = async function(peer, channelName, blockNumber, username, 
 		return error.toString();
 	}
 };
-var getTransactionByID = async function(peer, channelName, trxnID, username, org_name) {
+
+// 通过ID获取交易信息
+const getTransactionByID = async function(peer, channelName, trxnID, username, org_name) {
 	try {
-		// first setup the client for this org
 		var client = await helper.getClientForOrg(org_name, username);
 		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
 		var channel = client.getChannel(channelName);
@@ -103,12 +90,13 @@ var getTransactionByID = async function(peer, channelName, trxnID, username, org
 		return error.toString();
 	}
 };
-var getBlockByHash = async function(peer, channelName, hash, username, org_name) {
+
+// 通过哈希获取区块信息
+const getBlockByHash = async function(peer, channelName, hash, username, org_name) {
 	try {
-		// first setup the client for this org
-		var client = await helper.getClientForOrg(org_name, username);
+		let client = await helper.getClientForOrg(org_name, username);
 		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
-		var channel = client.getChannel(channelName);
+		let channel = client.getChannel(channelName);
 		if(!channel) {
 			let message = util.format('Channel %s was not defined in the connection profile', channelName);
 			logger.error(message);
@@ -128,7 +116,9 @@ var getBlockByHash = async function(peer, channelName, hash, username, org_name)
 		return error.toString();
 	}
 };
-var getChainInfo = async function(peer, channelName, username, org_name) {
+
+// 获取区块链的信息
+const getChainInfo = async function(peer, channelName, username, org_name) {
 	try {
 		// first setup the client for this org
 		var client = await helper.getClientForOrg(org_name, username);
@@ -153,8 +143,9 @@ var getChainInfo = async function(peer, channelName, username, org_name) {
 		return error.toString();
 	}
 };
-//getInstalledChaincodes
-var getInstalledChaincodes = async function(peer, channelName, type, username, org_name) {
+
+// 获取已经安装的链代码
+const getInstalledChaincodes = async function(peer, channelName, type, username, org_name) {
 	try {
 		// first setup the client for this org
 		var client = await helper.getClientForOrg(org_name, username);
@@ -197,7 +188,9 @@ var getInstalledChaincodes = async function(peer, channelName, type, username, o
 		return error.toString();
 	}
 };
-var getChannels = async function(peer, username, org_name) {
+
+// 获取通道信息
+const getChannels = async function(peer, username, org_name) {
 	try {
 		// first setup the client for this org
 		var client = await helper.getClientForOrg(org_name, username);

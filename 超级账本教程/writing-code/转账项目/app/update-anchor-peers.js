@@ -1,18 +1,12 @@
-/**
- * Copyright Hitachi America, Ltd. All Rights Reserved.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 'use strict';
-var util = require('util');
-var fs = require('fs');
-var path = require('path');
-
-var helper = require('./helper.js');
-var logger = helper.getLogger('update-anchor-peers');
-
-var updateAnchorPeers = async function(channelName, configUpdatePath, username, org_name) {
+const util = require('util');
+const fs = require('fs');
+const path = require('path');
+const
+const helper = require('./helper.js');
+const logger = helper.getLogger('update-anchor-peers');
+const
+const updateAnchorPeers = async function(channelName, configUpdatePath, username, org_name) {
 	logger.debug('\n====== Updating Anchor Peers on \'' + channelName + '\' ======\n');
 	var error_message = null;
 	try {

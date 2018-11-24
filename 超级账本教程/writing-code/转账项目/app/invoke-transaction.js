@@ -1,43 +1,27 @@
-/**
- * Copyright 2017 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 'use strict';
-var util = require('util');
-var helper = require('./helper.js');
-var logger = helper.getLogger('invoke-chaincode');
+const util = require('util');
+const helper = require('./helper.js');
+const logger = helper.getLogger('invoke-chaincode');
 
-var invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn, args, username, org_name) {
-	logger.debug(util.format('\n============ invoke transaction on channel %s ============\n', channelName));
-	var error_message = null;
-	var tx_id_string = null;
+const invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn, args, username, org_name) {
+	logger.debug(util.format('\n============ 激活通道上的交易 %s ============\n', channelName));
+	let error_message = null;
+	let tx_id_string = null;
 	try {
-		// first setup the client for this org
-		var client = await helper.getClientForOrg(org_name, username);
+		let client = await helper.getClientForOrg(org_name, username);
 		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
-		var channel = client.getChannel(channelName);
+		let channel = client.getChannel(channelName);
 		if(!channel) {
 			let message = util.format('Channel %s was not defined in the connection profile', channelName);
 			logger.error(message);
 			throw new Error(message);
 		}
 		var tx_id = client.newTransactionID();
-		// will need the transaction ID string for the event registration later
+        // 获取交易id
 		tx_id_string = tx_id.getTransactionID();
 
-		// send proposal to endorser
-		var request = {
+        // 构建发送到背书节点的请求
+		let request = {
 			targets: peerNames,
 			chaincodeId: chaincodeName,
 			fcn: fcn,
@@ -51,14 +35,14 @@ var invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn,
 		// the returned object has both the endorsement results
 		// and the actual proposal, the proposal will be needed
 		// later when we send a transaction to the orderer
-		var proposalResponses = results[0];
-		var proposal = results[1];
+		let proposalResponses = results[0];
+		let proposal = results[1];
 
 		// lets have a look at the responses to see if they are
 		// all good, if good they will also include signatures
 		// required to be committed
-		var all_good = true;
-		for (var i in proposalResponses) {
+		let all_good = true;
+		for (let i in proposalResponses) {
 			let one_good = false;
 			if (proposalResponses && proposalResponses[i].response &&
 				proposalResponses[i].response.status === 200) {
@@ -78,7 +62,7 @@ var invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn,
 
 			// wait for the channel-based event hub to tell us
 			// that the commit was good or bad on each peer in our organization
-			var promises = [];
+			let promises = [];
 			let event_hubs = channel.getChannelEventHubsForOrg();
 			event_hubs.forEach((eh) => {
 				logger.debug('invokeEventPromise - setting up event');
