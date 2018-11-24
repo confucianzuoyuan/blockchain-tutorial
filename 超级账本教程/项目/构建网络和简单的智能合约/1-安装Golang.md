@@ -8,11 +8,19 @@ $ sudo apt-get install golang-go
 
 配置环境变量
 
-```sh
-$ export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+将下列exports到你的~/.bashrc。GOROOT环境变量指定了你的golang二进制文件的路径，GOPATH指定了你工程的工作空间的路径。
+
+```
+export GOROOT=/usr/lib/go-1.11
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 ```
 
-如果需要快捷方式，可以进行软链接。
+然后
+
+```
+$ source ~/.bashrc
+```
 
 问题解决：
 

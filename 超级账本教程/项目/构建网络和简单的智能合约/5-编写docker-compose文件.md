@@ -1,4 +1,4 @@
-1. 在项目文件夹中新建一个base文件夹。
+1. 在项目文件夹`fabric-projects`中新建一个base文件夹。
 
 ```sh
 $ mkdir base & cd base

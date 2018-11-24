@@ -52,3 +52,27 @@ $ sudo chmod +x /usr/local/bin/docker-compose
 ```sh
 $ docker-compose --version
 ```
+
+----
+
+无需sudo运行docker
+
+```
+$ sudo groupadd docker
+$ sudo usermod -aG docker $USER
+$ docker run hello-world
+$ newgrp - docker
+```
+
+----
+
+将docker的源设置为国内源
+
+修改 /etc/docker/daemon.json 文件并添加上 registry-mirrors 键值。
+
+```
+{
+  "registry-mirrors": ["https://registry.docker-cn.com"]
+}
+```
+
