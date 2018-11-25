@@ -76,3 +76,9 @@ $ newgrp - docker
 }
 ```
 
+然后重启docker
+
+```
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart docker
+```

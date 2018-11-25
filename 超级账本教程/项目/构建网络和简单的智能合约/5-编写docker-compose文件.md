@@ -1,10 +1,6 @@
-1. 在项目文件夹`fabric-projects`中新建一个base文件夹。
+1. 在项目文件夹`fabric-projects`中
 
-```sh
-$ mkdir base & cd base
-```
-
-然后新建一个文件
+新建一个文件
 
 ```sh
 $ vim docker-compose-base.yaml
@@ -35,9 +31,9 @@ services: # # 在版本2中，所有的服务都要放在services根下面
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric # 指定容器的工作目录
     command: orderer # 容器启动后默认执行的命令
     volumes: # 将本地文件路径映射到容器中的路径之中
-    - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-    - ../crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp:/var/hyperledger/orderer/msp
-    - ../crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/tls/:/var/hyperledger/orderer/tls
+    - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+    - ./crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp:/var/hyperledger/orderer/msp
+    - ./crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/tls/:/var/hyperledger/orderer/tls
     - orderer.atguigu.com:/var/hyperledger/production/orderer
     ports: # 暴露端口信息
       - 7050:7050
@@ -55,8 +51,8 @@ services: # # 在版本2中，所有的服务都要放在services根下面
       - CORE_PEER_LOCALMSPID=Org1MSP
     volumes:
         - /var/run/:/host/var/run/
-        - ../crypto-config/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/msp:/etc/hyperledger/fabric/msp
-        - ../crypto-config/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/tls:/etc/hyperledger/fabric/tls
         - peer0.org1.atguigu.com:/var/hyperledger/production
     ports:
       - 7051:7051
@@ -75,8 +71,8 @@ services: # # 在版本2中，所有的服务都要放在services根下面
       - CORE_PEER_LOCALMSPID=Org1MSP
     volumes:
         - /var/run/:/host/var/run/
-        - ../crypto-config/peerOrganizations/org1.atguigu.com/peers/peer1.org1.atguigu.com/msp:/etc/hyperledger/fabric/msp
-        - ../crypto-config/peerOrganizations/org1.atguigu.com/peers/peer1.org1.atguigu.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/org1.atguigu.com/peers/peer1.org1.atguigu.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/org1.atguigu.com/peers/peer1.org1.atguigu.com/tls:/etc/hyperledger/fabric/tls
         - peer1.org1.atguigu.com:/var/hyperledger/production
 
     ports:
@@ -96,8 +92,8 @@ services: # # 在版本2中，所有的服务都要放在services根下面
       - CORE_PEER_LOCALMSPID=Org2MSP
     volumes:
         - /var/run/:/host/var/run/
-        - ../crypto-config/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/msp:/etc/hyperledger/fabric/msp
-        - ../crypto-config/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls:/etc/hyperledger/fabric/tls
         - peer0.org2.atguigu.com:/var/hyperledger/production
     ports:
       - 9051:7051
@@ -116,15 +112,19 @@ services: # # 在版本2中，所有的服务都要放在services根下面
       - CORE_PEER_LOCALMSPID=Org2MSP
     volumes:
         - /var/run/:/host/var/run/
-        - ../crypto-config/peerOrganizations/org2.atguigu.com/peers/peer1.org2.atguigu.com/msp:/etc/hyperledger/fabric/msp
-        - ../crypto-config/peerOrganizations/org2.atguigu.com/peers/peer1.org2.atguigu.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/org2.atguigu.com/peers/peer1.org2.atguigu.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/org2.atguigu.com/peers/peer1.org2.atguigu.com/tls:/etc/hyperledger/fabric/tls
         - peer1.org2.atguigu.com:/var/hyperledger/production
     ports:
       - 10051:7051
       - 10053:7053
 ```
 
-然后接着写
+然后
+
+```
+$ vim peer-base.yaml
+```
 
 ```yaml
 version: '2'
@@ -151,7 +151,7 @@ services:
     command: peer node start # 容器启动之后，运行peer node start 命令开启服务
 ```
 
-然后在和base同级的目录下，创建一个新文件
+然后创建一个新文件
 
 ```sh
 $ vim docker-compose-cli.yaml
@@ -178,7 +178,7 @@ services: # Service根下，是该模板文件定义的所有服务
 
   orderer.atguigu.com:
     extends:
-      file:   base/docker-compose-base.yaml # 进行拓展时使用的文件，可以认为是继承
+      file:   docker-compose-base.yaml # 进行拓展时使用的文件，可以认为是继承
       service: orderer.atguigu.com # 进行拓展时使用的服务
     # 以上表示使用base/docker-compose-base.yaml中的orderer.atguigu.com服务进行拓展
     container_name: orderer.atguigu.com
@@ -188,7 +188,7 @@ services: # Service根下，是该模板文件定义的所有服务
   peer0.org1.atguigu.com:
     container_name: peer0.org1.atguigu.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file:  docker-compose-base.yaml
       service: peer0.org1.atguigu.com
     networks:
       - atguigu 
@@ -196,7 +196,7 @@ services: # Service根下，是该模板文件定义的所有服务
   peer1.org1.atguigu.com:
     container_name: peer1.org1.atguigu.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file:  docker-compose-base.yaml
       service: peer1.org1.atguigu.com
     networks:
       - atguigu 
@@ -204,7 +204,7 @@ services: # Service根下，是该模板文件定义的所有服务
   peer0.org2.atguigu.com:
     container_name: peer0.org2.atguigu.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file:  docker-compose-base.yaml
       service: peer0.org2.atguigu.com
     networks:
       - atguigu 
@@ -212,7 +212,7 @@ services: # Service根下，是该模板文件定义的所有服务
   peer1.org2.atguigu.com:
     container_name: peer1.org2.atguigu.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file:  docker-compose-base.yaml
       service: peer1.org2.atguigu.com
     networks:
       - atguigu 

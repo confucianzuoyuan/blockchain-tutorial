@@ -1,5 +1,7 @@
 编写一个简单的链码
 
+路径：`fabric-projects/chaincode/simpleasset/go/`
+
 ```go
 package main
 
@@ -102,7 +104,7 @@ $ docker exec -it cli bash
 ```
 
 ```sh
-$ export CHANNEL_NAME=mychannel
+$ export CHANNEL_NAME=atguiguchannel
 ```
 
 # 安装链码为1.0版本
@@ -112,6 +114,8 @@ $ export CHANNEL_NAME=mychannel
 首先，将链代码安装到四个对等节点之一上。这些命令将指定的源代码放在我们的对等节点文件系统上。
 
 每个链代码名称和版本只能安装一个版本的源代码。源代码存在于对等节点基于链代码名称和版本的文件系统中;它与语言无关。类似地，实例化的链代码容器将反映对等节点上安装的任何语言。
+
+注意这里要先把链代码写好。
 
 ```sh
 $ peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/

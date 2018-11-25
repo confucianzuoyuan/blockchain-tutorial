@@ -1,3 +1,5 @@
+路径: `fabric-projects/chaincode/simplechaincode/go/`
+
 chaincode如下
 
 ```go
@@ -183,8 +185,10 @@ func main() {
 $ docker exec -it cli bash
 ```
 
+如果链代码无法安装，则需要将cli容器stop，然后重启。
+
 ```sh
-$ export CHANNEL_NAME=mychannel
+$ export CHANNEL_NAME=atguiguchannel
 $ peer chaincode install -n simplechaincode -v 1.0 -p github.com/chaincode/simplechaincode/go/
 ```
 
