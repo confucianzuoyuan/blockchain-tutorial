@@ -1,9 +1,4 @@
 #!/bin/bash
-#
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
 
 jq --version > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -40,10 +35,10 @@ function setChaincodePath(){
 	LANGUAGE=`echo "$LANGUAGE" | tr '[:upper:]' '[:lower:]'`
 	case "$LANGUAGE" in
 		"golang")
-		CC_SRC_PATH="github.com/example_cc/go"
+		CC_SRC_PATH="github.com/atguigu_cc/go"
 		;;
 		"node")
-		CC_SRC_PATH="$PWD/artifacts/src/github.com/example_cc/node"
+		CC_SRC_PATH="$PWD/artifacts/src/github.com/atguigu_cc/node"
 		;;
 		*) printf "\n ------ Language $LANGUAGE is not supported yet ------\n"$
 		exit 1
@@ -95,7 +90,7 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"]
+	"peers": ["peer0.org1.atguigu.com","peer1.org1.atguigu.com"]
 }'
 echo
 echo
@@ -107,7 +102,7 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org2.example.com","peer1.org2.example.com"]
+	"peers": ["peer0.org2.atguigu.com","peer1.org2.atguigu.com"]
 }'
 echo
 echo
@@ -143,8 +138,8 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d "{
-	\"peers\": [\"peer0.org1.example.com\",\"peer1.org1.example.com\"],
-	\"chaincodeName\":\"mycc\",
+	\"peers\": [\"peer0.org1.atguigu.com\",\"peer1.org1.atguigu.com\"],
+	\"chaincodeName\":\"atguigubalancetransfer\",
 	\"chaincodePath\":\"$CC_SRC_PATH\",
 	\"chaincodeType\": \"$LANGUAGE\",
 	\"chaincodeVersion\":\"v0\"
@@ -159,8 +154,8 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json" \
   -d "{
-	\"peers\": [\"peer0.org2.example.com\",\"peer1.org2.example.com\"],
-	\"chaincodeName\":\"mycc\",
+	\"peers\": [\"peer0.org2.atguigu.com\",\"peer1.org2.atguigu.com\"],
+	\"chaincodeName\":\"atguigubalancetransfer\",
 	\"chaincodePath\":\"$CC_SRC_PATH\",
 	\"chaincodeType\": \"$LANGUAGE\",
 	\"chaincodeVersion\":\"v0\"
@@ -175,7 +170,7 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d "{
-	\"chaincodeName\":\"mycc\",
+	\"chaincodeName\":\"atguigubalancetransfer\",
 	\"chaincodeVersion\":\"v0\",
 	\"chaincodeType\": \"$LANGUAGE\",
 	\"args\":[\"a\",\"100\",\"b\",\"200\"]
@@ -186,11 +181,11 @@ echo
 echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
 TRX_ID=$(curl -s -X POST \
-  http://localhost:4000/channels/atguiguchannel/chaincodes/mycc \
+  http://localhost:4000/channels/atguiguchannel/chaincodes/atguigubalancetransfer \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
+	"peers": ["peer0.org1.atguigu.com","peer0.org2.atguigu.com"],
 	"fcn":"move",
 	"args":["a","b","10"]
 }')
@@ -201,7 +196,7 @@ echo
 echo "GET query chaincode on peer1 of Org1"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=query&args=%5B%22a%22%5D" \
+  "http://localhost:4000/channels/atguiguchannel/chaincodes/atguigubalancetransfer?peer=peer0.org1.atguigu.com&fcn=query&args=%5B%22a%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -210,7 +205,7 @@ echo
 echo "GET query Block by blockNumber"
 echo
 BLOCK_INFO=$(curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel/blocks/1?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/blocks/1?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json")
 echo $BLOCK_INFO
@@ -220,7 +215,7 @@ echo
 
 echo "GET query Transaction by TransactionID"
 echo
-curl -s -X GET http://localhost:4000/channels/atguiguchannel/transactions/$TRX_ID?peer=peer0.org1.example.com \
+curl -s -X GET http://localhost:4000/channels/atguiguchannel/transactions/$TRX_ID?peer=peer0.org1.atguigu.com \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -230,7 +225,7 @@ echo
 echo "GET query Block by Hash - Hash is $HASH"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel/blocks?hash=$HASH&peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/blocks?hash=$HASH&peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "cache-control: no-cache" \
   -H "content-type: application/json" \
@@ -241,7 +236,7 @@ echo
 echo "GET query ChainInfo"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -250,7 +245,7 @@ echo
 echo "GET query Installed chaincodes"
 echo
 curl -s -X GET \
-  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com" \
+  "http://localhost:4000/chaincodes?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -259,7 +254,7 @@ echo
 echo "GET query Instantiated chaincodes"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel/chaincodes?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/chaincodes?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -268,7 +263,7 @@ echo
 echo "GET query Channels"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo

@@ -1,8 +1,8 @@
 {
-    "name": "fabcar",
+    "name": "atguigucar",
     "version": "1.0.0",
-    "description": "Hyperledger Fabric Car Sample Application",
-    "main": "fabcar.js",
+    "description": "Hyperledger Fabric Atguigu Car Application",
+    "main": "atguigucar.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -16,8 +16,8 @@
     "keywords": [
         "Hyperledger",
         "Fabric",
+        "Atguigu",
         "Car",
-        "Sample",
         "Application"
     ]
 }

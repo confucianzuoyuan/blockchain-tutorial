@@ -137,7 +137,7 @@ curl -s -X POST \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"]
+	"peers": ["peer0.org1.atguigu.com","peer1.org1.atguigu.com"]
 }'
 ```
 ### Install chaincode
@@ -148,9 +148,9 @@ curl -s -X POST \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"],
+	"peers": ["peer0.org1.atguigu.com","peer1.org1.atguigu.com"],
 	"chaincodeName":"mycc",
-	"chaincodePath":"github.com/example_cc/go",
+	"chaincodePath":"github.com/atguigu_cc/go",
 	"chaincodeType": "golang",
 	"chaincodeVersion":"v0"
 }'
@@ -163,9 +163,9 @@ curl -s -X POST \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"],
+	"peers": ["peer0.org1.atguigu.com","peer1.org1.atguigu.com"],
 	"chaincodeName":"mycc",
-	"chaincodePath":"$PWD/artifacts/src/github.com/example_cc/node",
+	"chaincodePath":"$PWD/artifacts/src/github.com/atguigu_cc/node",
 	"chaincodeType": "node",
 	"chaincodeVersion":"v0"
 }'
@@ -224,7 +224,7 @@ curl -s -X POST \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
+	"peers": ["peer0.org1.atguigu.com","peer0.org2.atguigu.com"],
 	"fcn":"move",
 	"args":["a","b","10"]
 }'
@@ -235,7 +235,7 @@ curl -s -X POST \
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=query&args=%5B%22a%22%5D" \
+  "http://localhost:4000/channels/atguiguchannel/chaincodes/mycc?peer=peer0.org1.atguigu.com&fcn=query&args=%5B%22a%22%5D" \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -244,7 +244,7 @@ curl -s -X GET \
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel/blocks/1?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/blocks/1?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -252,7 +252,7 @@ curl -s -X GET \
 ### Query Transaction by TransactionID
 
 ```
-curl -s -X GET http://localhost:4000/channels/atguiguchannel/transactions/<put transaction id here>?peer=peer0.org1.example.com \
+curl -s -X GET http://localhost:4000/channels/atguiguchannel/transactions/<put transaction id here>?peer=peer0.org1.atguigu.com \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -263,7 +263,7 @@ curl -s -X GET http://localhost:4000/channels/atguiguchannel/transactions/<put t
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/channels/atguiguchannel?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -272,7 +272,7 @@ curl -s -X GET \
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com&type=installed" \
+  "http://localhost:4000/chaincodes?peer=peer0.org1.atguigu.com&type=installed" \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -281,7 +281,7 @@ curl -s -X GET \
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com&type=instantiated" \
+  "http://localhost:4000/chaincodes?peer=peer0.org1.atguigu.com&type=instantiated" \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -290,7 +290,7 @@ curl -s -X GET \
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/channels?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels?peer=peer0.org1.atguigu.com" \
   -H "authorization: Bearer <put JSON Web Token here>" \
   -H "content-type: application/json"
 ```
@@ -307,14 +307,14 @@ rm -rf fabric-client-kv-org[1-2]
 
 ### Network configuration considerations
 
-You have the ability to change configuration parameters by either directly editing the network-config.yaml file or provide an additional file for an alternative target network. The app uses an optional environment variable "TARGET_NETWORK" to control the configuration files to use. For example, if you deployed the target network on Amazon Web Services EC2, you can add a file "network-config-aws.yaml", and set the "TARGET_NETWORK" environment to 'aws'. The app will pick up the settings inside the "network-config-aws.yaml" file.
+You have the ability to change configuration parameters by either directly editing the network-config.yaml file or provide an additional file for an alternative target network. The app uses an optional environment variable "TARGET_NETWORK" to control the configuration files to use. For atguigu, if you deployed the target network on Amazon Web Services EC2, you can add a file "network-config-aws.yaml", and set the "TARGET_NETWORK" environment to 'aws'. The app will pick up the settings inside the "network-config-aws.yaml" file.
 
 #### IP Address** and PORT information
 
 If you choose to customize your docker-compose yaml file by hardcoding IP Addresses and PORT information for your peers and orderer, then you MUST also add the identical values into the network-config.yaml file. The url and eventUrl settings will need to be adjusted to match your docker-compose yaml file.
 
 ```
-peer1.org1.example.com:
+peer1.org1.atguigu.com:
   url: grpcs://x.x.x.x:7056
   eventUrl: grpcs://x.x.x.x:7058
 
