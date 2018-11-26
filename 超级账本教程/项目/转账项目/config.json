@@ -2,7 +2,7 @@
    "host":"localhost",
    "port":"4000",
    "jwt_expiretime": "36000",
-   "channelName":"mychannel",
+   "channelName":"atguiguchannel",
    "CC_SRC_PATH":"../artifacts",
    "eventWaitTime":"30000",
    "admins":[

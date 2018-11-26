@@ -1,7 +1,7 @@
 version: '2'
 
 networks:
-  basic:
+  atguigu:
 
 services:
   ca.atguigu.com:
@@ -18,7 +18,7 @@ services:
       - ./crypto-config/peerOrganizations/org1.atguigu.com/ca/:/etc/hyperledger/fabric-ca-server-config
     container_name: ca.atguigu.com
     networks:
-      - basic
+      - atguigu 
 
   orderer.atguigu.com:
     container_name: orderer.atguigu.com
@@ -39,7 +39,7 @@ services:
         - ./crypto-config/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/:/etc/hyperledger/msp/orderer
         - ./crypto-config/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/:/etc/hyperledger/msp/peerOrg1
     networks:
-      - basic
+      - atguigu 
 
   peer0.org1.atguigu.com:
     container_name: peer0.org1.atguigu.com
@@ -71,7 +71,7 @@ services:
       - orderer.atguigu.com
       - couchdb
     networks:
-      - basic
+      - atguigu 
 
   couchdb:
     container_name: couchdb
@@ -82,7 +82,7 @@ services:
     ports:
       - 5984:5984
     networks:
-      - basic
+      - atguigu 
 
   cli:
     container_name: cli
@@ -101,12 +101,11 @@ services:
     command: /bin/bash
     volumes:
         - /var/run/:/host/var/run/
-        - ./../chaincode/:/opt/gopath/src/github.com/
+        - ./chaincode/:/opt/gopath/src/github.com/
         - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
     networks:
-        - basic
+        - atguigu 
     #depends_on:
     #  - orderer.atguigu.com
     #  - peer0.org1.atguigu.com
     #  - couchdb
-

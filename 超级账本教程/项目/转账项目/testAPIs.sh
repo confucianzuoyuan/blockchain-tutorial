@@ -82,8 +82,8 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"channelName":"mychannel",
-	"channelConfigPath":"../artifacts/channel/mychannel.tx"
+	"channelName":"atguiguchannel",
+	"channelConfigPath":"../artifacts/channel/atguiguchannel.tx"
 }'
 echo
 echo
@@ -91,7 +91,7 @@ sleep 5
 echo "POST request Join channel on Org1"
 echo
 curl -s -X POST \
-  http://localhost:4000/channels/mychannel/peers \
+  http://localhost:4000/channels/atguiguchannel/peers \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -103,7 +103,7 @@ echo
 echo "POST request Join channel on Org2"
 echo
 curl -s -X POST \
-  http://localhost:4000/channels/mychannel/peers \
+  http://localhost:4000/channels/atguiguchannel/peers \
   -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -115,7 +115,7 @@ echo
 echo "POST request Update anchor peers on Org1"
 echo
 curl -s -X POST \
-  http://localhost:4000/channels/mychannel/anchorpeers \
+  http://localhost:4000/channels/atguiguchannel/anchorpeers \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -127,7 +127,7 @@ echo
 echo "POST request Update anchor peers on Org2"
 echo
 curl -s -X POST \
-  http://localhost:4000/channels/mychannel/anchorpeers \
+  http://localhost:4000/channels/atguiguchannel/anchorpeers \
   -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -171,7 +171,7 @@ echo
 echo "POST instantiate chaincode on Org1"
 echo
 curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes \
+  http://localhost:4000/channels/atguiguchannel/chaincodes \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d "{
@@ -186,7 +186,7 @@ echo
 echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
 TRX_ID=$(curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/mycc \
+  http://localhost:4000/channels/atguiguchannel/chaincodes/mycc \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -201,7 +201,7 @@ echo
 echo "GET query chaincode on peer1 of Org1"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=query&args=%5B%22a%22%5D" \
+  "http://localhost:4000/channels/atguiguchannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=query&args=%5B%22a%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -210,7 +210,7 @@ echo
 echo "GET query Block by blockNumber"
 echo
 BLOCK_INFO=$(curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/blocks/1?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/blocks/1?peer=peer0.org1.example.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json")
 echo $BLOCK_INFO
@@ -220,7 +220,7 @@ echo
 
 echo "GET query Transaction by TransactionID"
 echo
-curl -s -X GET http://localhost:4000/channels/mychannel/transactions/$TRX_ID?peer=peer0.org1.example.com \
+curl -s -X GET http://localhost:4000/channels/atguiguchannel/transactions/$TRX_ID?peer=peer0.org1.example.com \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -230,7 +230,7 @@ echo
 echo "GET query Block by Hash - Hash is $HASH"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/blocks?hash=$HASH&peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/blocks?hash=$HASH&peer=peer0.org1.example.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "cache-control: no-cache" \
   -H "content-type: application/json" \
@@ -241,7 +241,7 @@ echo
 echo "GET query ChainInfo"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel?peer=peer0.org1.example.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -259,7 +259,7 @@ echo
 echo "GET query Instantiated chaincodes"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/atguiguchannel/chaincodes?peer=peer0.org1.example.com" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo

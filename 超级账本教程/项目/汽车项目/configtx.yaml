@@ -31,7 +31,6 @@ Orderer: &OrdererDefaults
     Organizations:
 
 Profiles:
-
     OneOrgOrdererGenesis:
         Orderer:
             <<: *OrdererDefaults
