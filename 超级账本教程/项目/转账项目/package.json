@@ -1,5 +1,5 @@
 {
-  "name": "balance-transfer",
+  "name": "atguigu-balance-transfer",
   "version": "1.0.0",
   "description": "A balance-transfer example node program to demonstrate using node.js SDK APIs",
   "main": "app.js",
@@ -8,7 +8,7 @@
   },
   "keywords": [
     "fabric-client sample app",
-    "balance-transfer node sample",
+    "atguigu-balance-transfer node sample",
     "v1.0 fabric nodesdk sample"
   ],
   "engines": {

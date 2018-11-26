@@ -27,17 +27,18 @@ var query = require('./app/query.js');
 var host = process.env.HOST || hfc.getConfigSetting('host');
 var port = process.env.PORT || hfc.getConfigSetting('port');
 ///////////////////////////////////////////////////////////////////////////////
-//////////////////////////////// SET CONFIGURATONS ////////////////////////////
+//////////////////////////////// 中间件相关 ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+// 跨域相关
 app.options('*', cors());
 app.use(cors());
-//support parsing of application/json type post data
+// 用来解析json结构的post数据
 app.use(bodyParser.json());
-//support parsing of application/x-www-form-urlencoded post data
+// 用来解析application/x-www-form-urlencoded格式的post数据
 app.use(bodyParser.urlencoded({
 	extended: false
 }));
-// set secret variable
+// 设置产生jwt的密钥
 app.set('secret', 'thisismysecret');
 app.use(expressJWT({
 	secret: 'thisismysecret'
@@ -46,7 +47,7 @@ app.use(expressJWT({
 }));
 app.use(bearerToken());
 app.use(function(req, res, next) {
-	logger.debug(' ------>>>>>> new request for %s',req.originalUrl);
+	logger.debug(' ------>>>>>> 请求url %s',req.originalUrl);
 	if (req.originalUrl.indexOf('/users') >= 0) {
 		return next();
 	}
@@ -62,8 +63,7 @@ app.use(function(req, res, next) {
 			});
 			return;
 		} else {
-			// add the decoded user name and org name to the request object
-			// for the downstream code to use
+            // 在请求里添加username，orgname属性，供后面的函数使用
 			req.username = decoded.username;
 			req.orgname = decoded.orgName;
 			logger.debug(util.format('Decoded from JWT token: username - %s, orgname - %s', decoded.username, decoded.orgName));
@@ -91,7 +91,7 @@ function getErrorMessage(field) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////// REST ENDPOINTS START HERE ///////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-// Register and enroll user
+// 注册和登记用户
 app.post('/users', async function(req, res) {
 	var username = req.body.username;
 	var orgName = req.body.orgName;
@@ -123,7 +123,7 @@ app.post('/users', async function(req, res) {
 	}
 
 });
-// Create Channel
+// 创建通道
 app.post('/channels', async function(req, res) {
 	logger.info('<<<<<<<<<<<<<<<<< C R E A T E  C H A N N E L >>>>>>>>>>>>>>>>>');
 	logger.debug('End point : /channels');
@@ -143,7 +143,7 @@ app.post('/channels', async function(req, res) {
 	let message = await createChannel.createChannel(channelName, channelConfigPath, req.username, req.orgname);
 	res.send(message);
 });
-// Join Channel
+// 加入通道
 app.post('/channels/:channelName/peers', async function(req, res) {
 	logger.info('<<<<<<<<<<<<<<<<< J O I N  C H A N N E L >>>>>>>>>>>>>>>>>');
 	var channelName = req.params.channelName;
@@ -165,7 +165,7 @@ app.post('/channels/:channelName/peers', async function(req, res) {
 	let message =  await join.joinChannel(channelName, peers, req.username, req.orgname);
 	res.send(message);
 });
-// Update anchor peers
+// 更新锚节点
 app.post('/channels/:channelName/anchorpeers', async function(req, res) {
 	logger.debug('==================== UPDATE ANCHOR PEERS ==================');
 	var channelName = req.params.channelName;
@@ -184,7 +184,7 @@ app.post('/channels/:channelName/anchorpeers', async function(req, res) {
 	let message = await updateAnchorPeers.updateAnchorPeers(channelName, configUpdatePath, req.username, req.orgname);
 	res.send(message);
 });
-// Install chaincode on target peers
+// 在目标节点上安装链代码
 app.post('/chaincodes', async function(req, res) {
 	logger.debug('==================== INSTALL CHAINCODE ==================');
 	var peers = req.body.peers;
@@ -219,7 +219,7 @@ app.post('/chaincodes', async function(req, res) {
 	}
 	let message = await install.installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, chaincodeType, req.username, req.orgname)
 	res.send(message);});
-// Instantiate chaincode on target peers
+// 在目标节点上初始化链代码
 app.post('/channels/:channelName/chaincodes', async function(req, res) {
 	logger.debug('==================== INSTANTIATE CHAINCODE ==================');
 	var peers = req.body.peers;
@@ -260,7 +260,7 @@ app.post('/channels/:channelName/chaincodes', async function(req, res) {
 	let message = await instantiate.instantiateChaincode(peers, channelName, chaincodeName, chaincodeVersion, chaincodeType, fcn, args, req.username, req.orgname);
 	res.send(message);
 });
-// Invoke transaction on chaincode on target peers
+// 激活链代码上的交易
 app.post('/channels/:channelName/chaincodes/:chaincodeName', async function(req, res) {
 	logger.debug('==================== INVOKE ON CHAINCODE ==================');
 	var peers = req.body.peers;
@@ -292,7 +292,7 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', async function(req,
 	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, fcn, args, req.username, req.orgname);
 	res.send(message);
 });
-// Query on chaincode on target peers
+// 查询
 app.get('/channels/:channelName/chaincodes/:chaincodeName', async function(req, res) {
 	logger.debug('==================== QUERY BY CHAINCODE ==================');
 	var channelName = req.params.channelName;
