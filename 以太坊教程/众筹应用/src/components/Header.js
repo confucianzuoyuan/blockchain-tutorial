@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button } from '@material-ui/core';
 import {withStyles} from '@material-ui/core/styles';
+import { Link } from '../routes';
 
 const styles = {
     wrapper: {
@@ -43,9 +44,11 @@ class Header extends React.Component {
                                 </Typography>
                             </a>
                         </p>
+                        <Link route="/projects/create">
                         <Button variant="raised" color="primary">
                             发起项目
                         </Button>
+                        </Link>
                     </Toolbar>
                 </div>
             </AppBar>
