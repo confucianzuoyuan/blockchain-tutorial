@@ -8,6 +8,42 @@ $ mkdir atguigucar
 
 参见`项目`文件夹中的代码`configtx.yaml`, `crypto-config.yaml`, `docker-compose.yaml`
 
+编写`.env`文件
+
+```
+COMPOSE_PROJECT_NAME=net
+```
+
+生成密钥等工件
+
+把`fabric-projects`中的bin文件夹拷贝过来，当然也可以设置到全局的环境变量里面
+
+```
+#!/bin/sh
+export FABRIC_CFG_PATH=${PWD}
+CHANNEL_NAME=atguiguchannel
+
+# 先把没用的删掉
+rm -fr config/*
+rm -fr crypto-config/*
+
+# 生成加密相关的材料
+./bin/cryptogen generate --config=./crypto-config.yaml
+
+# 为排序节点生成创世区块
+./bin/configtxgen -profile OneOrgOrdererGenesis -outputBlock ./config/genesis.block
+
+# 生成通道配置交易
+./bin/configtxgen -profile OneOrgChannel -outputCreateChannelTx ./config/channel.tx -channelID $CHANNEL_NAME
+
+# 生成锚节点交易
+./bin/configtxgen -profile OneOrgChannel -outputAnchorPeersUpdate ./config/Org1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org1MSP
+```
+
+在docker-compose.yaml中有一个地方要替换
+
+就是fabric-ca密钥的替换
+
 3. 启动docker
 
 ```
