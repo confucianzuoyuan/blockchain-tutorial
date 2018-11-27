@@ -1,5 +1,5 @@
 import React from 'react';
-import {Grid, Button, Typography, LinearProgress, Paper, TextField, CircularProgress} from '@material-ui/core';
+import {Grid, Button, Typography, LinearProgress, Paper, TextField, CircularProgress, Table, TableHead, TableBody, TableRow, TableCell, Tab} from '@material-ui/core';
 import {Link} from '../../routes';
 import withRoot from '../../libs/withRoot';
 import Layout from '../../components/Layout';
@@ -17,6 +17,11 @@ class ProjectDetail extends React.Component {
         let [description, minInvest, maxInvest, 
             goal, balance, investorCount, paymentCount, owner] = Object.values(summary);
 
+        let tasks = [];
+        for(let i=0; i < paymentCount; i++){
+            tasks.push(contract.methods.payments(i).call());
+        }
+        let payments = await Promise.all(tasks);
         let project = {
             address: query.address,
             description,
@@ -26,7 +31,8 @@ class ProjectDetail extends React.Component {
             balance,
             investorCount,
             paymentCount,
-            owner
+            owner,
+            payments
         };
 
         return {project};
@@ -38,7 +44,8 @@ class ProjectDetail extends React.Component {
         this.state = {
             amount: 0,
             errmsg: '',
-            loading: false
+            loading: false,
+            isVoting: false
         }
         this.onSubmit = this.contributeProject.bind(this);
     }
@@ -87,6 +94,35 @@ class ProjectDetail extends React.Component {
             this.setState({loading: false});
         }
     }
+
+    async voteForPayment(index) {
+        try{
+            this.setState({isVoting: index});
+
+            const accounts = await web3.eth.getAccounts();
+            const sender = accounts[0];
+
+            const contract = Project(this.props.project.address);
+
+            let isInvestor = await contract.methods.investors(sender).call();
+            if(!isInvestor){
+                return window.alert("只有投资人才有投票权");
+            }
+
+            let result = await contract.methods.voteForPayment(index)
+                                .send({from: sender, gas: "5000000"});
+            window.alert("投票成功!");
+
+            setTimeout(()=>{
+                location.reload();
+            }, 1000);
+        } catch(err){
+            window.alert(err.message || err.toString());
+        } finally{
+            this.setState({isVoting: false});
+        }
+    }
+
     render(){
         return (
             <Layout>
@@ -94,6 +130,10 @@ class ProjectDetail extends React.Component {
                     项目基本信息
                 </Typography>
                 {this.renderBasicInfo(this.props.project)}
+                <Typography variant="title" color="inherit" style={{ margin: '30px 0 15px' }}>
+                    资金支出信息
+                </Typography>
+                {this.renderPayments(this.props.project)}
             </Layout>
         );
     }
@@ -136,6 +176,60 @@ class ProjectDetail extends React.Component {
                 </Grid>
             </Paper>
         );    
+    }
+
+    renderPayments(project){
+        return (
+            <Paper style={{ padding: '15px' }}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>用途</TableCell>
+                            <TableCell>金额</TableCell>
+                            <TableCell>收款方</TableCell>
+                            <TableCell>完成状态</TableCell>
+                            <TableCell>投票状态</TableCell>
+                            <TableCell>操作</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {
+                            project.payments.map((payment,index)=>
+                                this.renderPaymentRow(payment,index,project)
+                            )
+                        }
+                    </TableBody>
+                </Table>
+                <Link route={`/projects/${project.address}/payments/create`}>
+                <Button variant="raised" color="primary">
+                    创建资金支出请求
+                </Button>
+                </Link>
+            </Paper>
+        );
+    }
+    renderPaymentRow(payment, index, project){
+        let canVote = !payment.completed;
+        return (
+            <TableRow key={payment.id}>
+                <TableCell>{payment.description}</TableCell>
+                <TableCell>{web3.utils.fromWei(payment.amount,'ether')}</TableCell>
+                <TableCell>{payment.receiver}</TableCell>
+                <TableCell>{payment.completed?"是":"否"}</TableCell>
+                <TableCell>{payment.voterCount}/{project.investorCount}</TableCell>
+                <TableCell>
+                    {canVote && (
+                        <Button size="small" color="primary" onClick={()=>this.voteForPayment(index)}>
+                            {this.isVoting(index) ? <CircularProgress color="secondary" size={24}/> : "投赞成票"}
+                        </Button>
+                    )}
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    isVoting(index){
+        return ( typeof this.state.isVoting === "number" && this.state.isVoting === index);
     }
 }
 

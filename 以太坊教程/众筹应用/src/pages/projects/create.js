@@ -28,6 +28,15 @@ class ProjectCreate extends React.Component {
             this.setState({[key]: event.target.value});
         }
     }
+    // getDescInputHander(event){
+    //     console.log();
+    //     this.setState({description: event.target.value});
+    // }
+
+    // getMinInvestInputHander(event){
+    //     console.log();
+    //     this.setState({minInvest: event.target.value});
+    // }
 
     async createProject() {
         let {description, minInvest, maxInvest, goal} = this.state;
@@ -84,6 +93,7 @@ class ProjectCreate extends React.Component {
                             label="项目名称"
                             value={this.state.description}
                             onChange={this.getInputHandler('description')}
+                            // onChange={this.getDescInputHander.bind(this)}
                             margin="normal"/>
                         <TextField 
                             fullWidth
@@ -92,6 +102,7 @@ class ProjectCreate extends React.Component {
                             label="最小投资金额"
                             value={this.state.minInvest}
                             onChange={this.getInputHandler('minInvest')}
+                            // onChange={this.getMinInvestInputHander.bind(this)}
                             margin="normal"
                             InputProps={{ endAdornment: 'ETH' }}/>
                         <TextField 
