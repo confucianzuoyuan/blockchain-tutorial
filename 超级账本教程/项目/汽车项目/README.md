@@ -23,9 +23,9 @@ COMPOSE_PROJECT_NAME=net
 export FABRIC_CFG_PATH=${PWD}
 CHANNEL_NAME=atguiguchannel
 
-# 先把没用的删掉
-rm -fr config/*
-rm -fr crypto-config/*
+# 新建文件夹 
+mkdir config
+mkdir crypto-config
 
 # 生成加密相关的材料
 ./bin/cryptogen generate --config=./crypto-config.yaml
@@ -42,7 +42,7 @@ rm -fr crypto-config/*
 
 在docker-compose.yaml中有一个地方要替换
 
-就是fabric-ca密钥的替换
+就是fabric-ca密钥需要替换
 
 3. 启动docker
 
@@ -68,7 +68,23 @@ docker-compose -f docker-compose.yaml up -d cli
 6. 安装，初始化链代码等操作
 
 ```
+LANGUAGE=golang
+CC_SRC_PATH=github.com/atguigucar/go
+```
+
+```
 docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/users/Admin@org1.atguigu.com/msp" cli peer chaincode install -n atguigucar -v 1.0 -p "$CC_SRC_PATH" -l "$LANGUAGE"
 docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/users/Admin@org1.atguigu.com/msp" cli peer chaincode instantiate -o orderer.atguigu.com:7050 -C atguiguchannel -n atguigucar -l "$LANGUAGE" -v 1.0 -c '{"Args":[""]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
 docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.atguigu.com/users/Admin@org1.atguigu.com/msp" cli peer chaincode invoke -o orderer.atguigu.com:7050 -C atguiguchannel -n atguigucar -c '{"function":"initLedger","Args":[""]}'
+```
+
+7. npm install将需要的sdk安装
+
+8. 执行node程序
+
+```
+node enrollAdmin.js
+node registerUser.js
+node query.js
+node query.js
 ```
