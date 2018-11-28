@@ -5,6 +5,7 @@ import withRoot from '../../libs/withRoot';
 import Layout from '../../components/Layout';
 import InfoBlock from '../../components/InfoBlock';
 
+
 import web3 from '../../libs/web3';
 import Project from '../../libs/project';
 import ProjectList from '../../libs/projectList';
@@ -45,7 +46,8 @@ class ProjectDetail extends React.Component {
             amount: 0,
             errmsg: '',
             loading: false,
-            isVoting: false
+            isVoting: false,
+            isPaying: false
         }
         this.onSubmit = this.contributeProject.bind(this);
     }
@@ -120,6 +122,34 @@ class ProjectDetail extends React.Component {
             window.alert(err.message || err.toString());
         } finally{
             this.setState({isVoting: false});
+        }
+    }
+
+    async doPayment(index){
+        try{
+            this.setState({isPaying: index});
+            
+            const accounts = await web3.eth.getAccounts();
+            let sender = accounts[0];
+
+            const contract = Project(this.props.project.address);
+
+            if(sender !== this.props.project.owner){
+                return window.alert("只有项目方才能划转资金!");
+            }
+
+            let result = await contract.methods.doPayment(index)
+                                .send({from: sender, gas: "5000000"});
+            window.alert("资金划转成功!");
+
+            setTimeout(()=>{
+                location.reload();
+            }, 1000);
+        } catch (err){
+            console.log(err);
+            window.alert(err.message || err.toString());
+        } finally {
+            this.setState({isPaying: false});
         }
     }
 
@@ -210,6 +240,7 @@ class ProjectDetail extends React.Component {
     }
     renderPaymentRow(payment, index, project){
         let canVote = !payment.completed;
+        let canDoPayment = !payment.completed && (payment.voterCount / project.investorCount > 0.5);
         return (
             <TableRow key={payment.id}>
                 <TableCell>{payment.description}</TableCell>
@@ -223,6 +254,11 @@ class ProjectDetail extends React.Component {
                             {this.isVoting(index) ? <CircularProgress color="secondary" size={24}/> : "投赞成票"}
                         </Button>
                     )}
+                    {canDoPayment && (
+                        <Button size="small" color="primary" onClick={()=>this.doPayment(index)}>
+                            {this.isPaying(index) ? <CircularProgress color="secondary" size={24}/> : "资金划转"}
+                        </Button>
+                    )}
                 </TableCell>
             </TableRow>
         );
@@ -230,6 +266,10 @@ class ProjectDetail extends React.Component {
 
     isVoting(index){
         return ( typeof this.state.isVoting === "number" && this.state.isVoting === index);
+    }
+
+    isPaying(index){
+        return ( typeof this.state.isPaying === "number" && this.state.isPaying === index );
     }
 }
 
