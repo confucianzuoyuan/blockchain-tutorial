@@ -1,5 +1,7 @@
 const Web3 = require('web3')
-const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+// const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+const config = require('config');
+const web3 = new Web3(new Web3.providers.HttpProvider(config.get('providerUrl')));
 const fs = require('fs-extra');
 const path = require('path');
 // 1. get bytecode
@@ -12,7 +14,7 @@ const {interface, bytecode} = require(filePath);
 	// 3. get contract instance and deploy
 	console.time("deploy time");
 	let result = await new web3.eth.Contract(JSON.parse(interface))
-				 .deploy({data:bytecode})
+				 .deploy({data:'0x' + bytecode})
 				 .send({from: accounts[0], gas: 5000000});
 	console.timeEnd("deploy time");
 

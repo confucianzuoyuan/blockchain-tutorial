@@ -1,5 +1,7 @@
 const Web3 = require('web3');
-const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+// const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+const config = require('config');
+const web3 = new Web3(new Web3.providers.HttpProvider(config.get('providerUrl')));
 
 const ProjectList = require('../compiled/ProjectList.json');
 const address = require('../address.json');

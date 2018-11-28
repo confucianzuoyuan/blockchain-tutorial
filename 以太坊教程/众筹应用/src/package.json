@@ -5,27 +5,30 @@
   "main": "index.js",
   "scripts": {
     "compile": "node scripts/compile.js",
-    "predeploy": "npm run compile",
+    "predeploy": "npm run test",
     "deploy": "node scripts/deploy.js",
     "pretest": "npm run compile",
     "test": "./node_modules/mocha/bin/mocha tests/",
     "dev": "node server.js",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js"
+    "prestart": "npm run build",
+    "start": "pm2 restart pm2.json"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "react": "16.6.3",
-    "react-dom": "16.6.3",
+    "@material-ui/core": "^1.5.1",
+    "config": "^1.30.0",
     "next": "^7.0.2",
     "next-routes": "^1.4.2",
-    "@material-ui/core": "^1.5.1",
+    "react": "16.6.3",
+    "react-dom": "16.6.3",
     "solc": "^0.4.25",
     "web3": "^1.0.0-beta.36"
   },
   "devDependencies": {
     "ganache-cli": "^6.1.8",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "pm2": "^3.2.2"
   }
 }
