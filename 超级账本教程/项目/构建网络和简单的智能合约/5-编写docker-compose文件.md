@@ -17,17 +17,17 @@ services: # # 在版本2中，所有的服务都要放在services根下面
     container_name: orderer.atguigu.com # 定义容器的名称
     image: hyperledger/fabric-orderer:$IMAGE_TAG  # 指定容器的镜像
     environment: # 设置环境变量
-      - ORDERER_GENERAL_LOGLEVEL=INFO
-      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
-      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_LOGLEVEL=INFO         # 日志级别
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0 # 监听的host地址
+      - ORDERER_GENERAL_GENESISMETHOD=file    # 创世区块的类型是文件
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block # 排序节点的创世区块的位置
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP # msp的id名称
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp # msp的地址
       # enabled TLS
-      - ORDERER_GENERAL_TLS_ENABLED=true
-      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_TLS_ENABLED=true # 使用tls，注意复习https
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key # 私钥的位置
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt # 证书的位置
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt] # 根证书的位置
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric # 指定容器的工作目录
     command: orderer # 容器启动后默认执行的命令
     volumes: # 将本地文件路径映射到容器中的路径之中
@@ -41,14 +41,14 @@ services: # # 在版本2中，所有的服务都要放在services根下面
   peer0.org1.atguigu.com: # Org1的Peer0服务
     container_name: peer0.org1.atguigu.com
     extends:
-      file: peer-base.yaml
-      service: peer-base
+      file: peer-base.yaml # 扩展peer-base.yaml，也可以认为是继承
+      service: peer-base # 扩展的服务名称
     environment:
-      - CORE_PEER_ID=peer0.org1.atguigu.com
-      - CORE_PEER_ADDRESS=peer0.org1.atguigu.com:7051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.atguigu.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.atguigu.com:7051
-      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ID=peer0.org1.atguigu.com # peer节点的id名称
+      - CORE_PEER_ADDRESS=peer0.org1.atguigu.com:7051 # peer节点监听的地址
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.atguigu.com:7051 # gossip协议的传播对象
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.atguigu.com:7051 # gossip协议暴露的endpoint端点
+      - CORE_PEER_LOCALMSPID=Org1MSP # msp的id名称
     volumes:
         - /var/run/:/host/var/run/
         - ./crypto-config/peerOrganizations/org1.atguigu.com/peers/peer0.org1.atguigu.com/msp:/etc/hyperledger/fabric/msp
@@ -134,14 +134,10 @@ services:
     image: hyperledger/fabric-peer:$IMAGE_TAG
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      # the following setting starts chaincode containers on the same
-      # bridge network as the peers
-      # https://docs.docker.com/compose/networking/
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_byfn
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_atguigu
       - CORE_LOGGING_LEVEL=INFO
-      #- CORE_LOGGING_LEVEL=DEBUG
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true # 是否使用leader选举，因为锚节点有可能故障
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
