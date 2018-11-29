@@ -21,7 +21,7 @@ services: # # 在版本2中，所有的服务都要放在services根下面
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0 # 监听的host地址
       - ORDERER_GENERAL_GENESISMETHOD=file    # 创世区块的类型是文件
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block # 排序节点的创世区块的位置
-      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP # msp的id名称
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP # msp的id名称, MSP是区块链里的账户
       - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp # msp的地址
       # enabled TLS
       - ORDERER_GENERAL_TLS_ENABLED=true # 使用tls，注意复习https
