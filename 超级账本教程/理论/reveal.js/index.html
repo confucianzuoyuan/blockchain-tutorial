@@ -45,6 +45,17 @@
                     - {read: a=0, write: a=100}; {read: a=0, write:a=200}
                     - a会被赋值为100
                 </section>
+                <section data-markdown>
+                    ```shell
+                    $ peer chaincode instantiate ...
+                    ```
+                    以上命令将会调用智能合约里的`Init`函数
+
+                    ```shell
+                    $ peer chaincode invoke ...
+                    ```
+                    以上命令将会调用`Invode`函数
+                </section>
 			</div>
 		</div>
 
