@@ -121,6 +121,12 @@ $ export CHANNEL_NAME=atguiguchannel
 $ peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/
 ```
 
+在Org2组织也安装链代码
+
+```sh
+$ CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/users/Admin@org2.atguigu.com/msp CORE_PEER_ADDRESS=peer0.org2.atguigu.com:7051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/
+```
+
 # 初始化链码，a=100
 
 接下来，在通道上实例化链码。这将初始化通道上的链代码，设置链代码的背书策略，并为目标对等节点启动链代码容器。记下-P参数。这是我们的策略，我们在此策略中指定针对要验证的链代码交易所需的请求级别。
@@ -131,11 +137,6 @@ $ peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleass
 $ peer chaincode instantiate -o orderer.atguigu.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/atguigu.com/orderers/orderer.atguigu.com/msp/tlscacerts/tlsca.atguigu.com-cert.pem -C $CHANNEL_NAME -n simpleasset -v 1.0 -c '{"Args":["a", "100"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
 ```
 
-在Org2组织也安装链代码
-
-```sh
-$ CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/users/Admin@org2.atguigu.com/msp CORE_PEER_ADDRESS=peer0.org2.atguigu.com:7051 CORE_PEER_LOCALMSPID="Org2MSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.atguigu.com/peers/peer0.org2.atguigu.com/tls/ca.crt peer chaincode install -n simpleasset -v 1.0 -p github.com/chaincode/simpleasset/go/
-```
 
 调用
 
