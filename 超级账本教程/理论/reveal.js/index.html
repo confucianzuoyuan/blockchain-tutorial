@@ -27,6 +27,24 @@
 				<section data-markdown data-background="#dddddd">
                     ![联盟链架构图](联盟链架构图.png)
                 </section>
+                <section data-markdown>
+                    # 背书节点(endorser peer)
+                    - 执行交易
+                      - org1: a=100
+                      - org2: a=200
+                    - 以上两笔交易在背书节点的执行结果都是正确的
+                </section>
+                <section data-markdown>
+                    # 排序节点
+                    - 排序节点看到的顺序: a=100;a=200
+                </section>
+                <section data-markdown>
+                    # 记账节点
+                    - 乐观锁
+                    - 读写集
+                    - {read: a=0, write: a=100}; {read: a=0, write:a=200}
+                    - a会被赋值为100
+                </section>
 			</div>
 		</div>
 
