@@ -56,6 +56,16 @@
                     ```
                     以上命令将会调用`Invode`函数
                 </section>
+                <section data-markdown data-background="#dddddd">
+                    ![网络拓扑](images/超级账本网络拓扑.png)
+                </section>
+                <section data-markdown>
+                    ### 对等节点分类
+                    - 背书节点: 安装了chaincode的peer节点
+                    - 记账节点: 所有节点都是记账节点
+                    - 领导节点: 排序节点广播区块时先广播给领导节点，再由每个组织的领导节点广播给自己组织的对等节点
+                    - 锚节点: 和锚节点同一个组织的节点可以通过锚节点来发现属于同一个通道的其他组织的节点
+                </section>
 			</div>
 		</div>
 
