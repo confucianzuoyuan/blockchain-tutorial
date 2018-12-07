@@ -27,37 +27,33 @@
 				<section data-markdown data-background="#dddddd">
                     ![联盟链架构图](images/联盟链架构图.png)
                 </section>
-                <section data-markdown>
-                    ## 背书节点(endorser peer)
-                    - 执行交易
-                      - org1: a=100
-                      - org2: a=200
-                    - 以上两笔交易在背书节点的执行结果都是正确的
-                </section>
-                <section data-markdown>
-                    # 排序节点
-                    - 排序节点看到的顺序: a=100;a=200
-                </section>
-                <section data-markdown>
-                    # 记账节点
-                    - 乐观锁
-                    - 读写集
-                    - {read: a=0, write: a=100}; {read: a=0, write:a=200}
-                    - a会被赋值为100
-                </section>
-                <section data-markdown>
-                    ```shell
-                    $ peer chaincode instantiate ...
-                    ```
-                    以上命令将会调用智能合约里的`Init`函数
-
-                    ```shell
-                    $ peer chaincode invoke ...
-                    ```
-                    以上命令将会调用`Invode`函数
-                </section>
                 <section data-markdown data-background="#dddddd">
                     ![网络拓扑](images/超级账本网络拓扑.png)
+                </section>
+                <section data-markdown>
+                    ## 超级账本流程
+                    1. 客户端向背书节点(每个组织都有)发起交易请求
+                    2. 背书节点模拟执行交易
+                    3. 各个组织的背书节点向客户端返回结果，半数以上通过即为通过
+                    4. 客户端向排序节点提交交易
+                    5. 排序节点对交易进行排序，并将多笔交易打包为区块
+                    6. 排序节点将区块广播给各个组织的领导节点
+                    7. 领导节点将区块广播给自己组织内的其他对等节点
+                    8. 记账完成
+                </section>
+                <section data-markdown>
+                    ## 共识流程(执行->排序->验证)
+                    1. 模拟执行交易
+                    2. 排序交易形成共识
+                    3. 验证交易并上链
+                </section>
+                <section data-markdown>
+                    ## 共识机制(mvcc)
+                    1. 客户端同时发起两个请求：a=1; a=2; 假设此时账本上a=0
+                    2. a=1; a=2;会被背书节点并行模拟执行，并且执行成功
+                    3. 如果排序节点看到的顺序是a=1; a=2; 那么此时看到的读写集为(0, 1); (0, 2);
+                    4. 先执行第一个读写集，将a赋值为1; 再看到下一个读写集(0, 2)时，由于此时a=1而不是0，所以a=2这个提交失败
+                    5. 于是客户端重新提交a=2这个交易请求，而由于此时读写集成了(1, 2); 和现在账本状态a=1吻合，所以提交交易成功。
                 </section>
                 <section data-markdown>
                     ### 对等节点分类
