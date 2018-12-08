@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown data-background="#dddddd">
+                    ![联盟链架构图](images/联盟链架构图.png)
+                </section>
+                <section data-markdown data-background="#dddddd">
+                    ![网络拓扑](images/超级账本网络拓扑.png)
+                </section>
+                <section data-markdown>
+                    ## 超级账本流程
+                    1. 客户端向背书节点(每个组织都有)发起交易请求
+                    2. 背书节点模拟执行交易
+                    3. 各个组织的背书节点向客户端返回结果，半数以上通过即为通过
+                    4. 客户端向排序节点提交交易
+                    5. 排序节点对交易进行排序，并将多笔交易打包为区块
+                    6. 排序节点将区块广播给各个组织的领导节点
+                    7. 领导节点将区块广播给自己组织内的其他对等节点
+                    8. 记账完成
+                </section>
+                <section data-markdown>
+                    ## 共识流程(执行->排序->验证)
+                    1. 模拟执行交易
+                    2. 排序交易形成共识
+                    3. 验证交易并上链
+                </section>
+                <section data-markdown>
+                    ## 共识机制(mvcc)
+                    1. 客户端同时发起两个请求：a=1; a=2; 假设此时账本上a=0
+                    2. a=1; a=2;会被背书节点并行模拟执行，并且执行成功
+                    3. 如果排序节点看到的顺序是a=1; a=2; 那么此时看到的读写集为(0, 1); (0, 2);
+                </section>
+                <section data-markdown>
+                    ## 共识机制(mvcc)
+                    4. 先执行第一个读写集，将a赋值为1; 再看到下一个读写集(0, 2)时，由于此时a=1而不是0，所以a=2这个提交失败
+                    5. 于是客户端重新提交a=2这个交易请求，而由于此时读写集成了(1, 2); 和现在账本状态a=1吻合，所以提交交易成功。
+                </section>
+                <section data-markdown>
+                    ### 对等节点分类
+                    - 背书节点: 安装了chaincode的peer节点
+                    - 记账节点: 所有节点都是记账节点
+                    - 领导节点: 排序节点广播区块时先广播给领导节点，再由每个组织的领导节点广播给自己组织的对等节点
+                    - 锚节点: 和锚节点同一个组织的节点可以通过锚节点来发现属于同一个通道的其他组织的节点
+                </section>
+                <section data-markdown data-background="#dddddd">
+                    ![solo和kafka](images/solo和kafka.png)
+                </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>

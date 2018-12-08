@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+                <section data-markdown>
+                    # 成员
+                </section>
+                <section data-markdown>
+                    - 如果你已阅读身份上的文档，你已经了解了PKI如何通过信任链提供可验证的身份。 现在让我们看看这些身份如何用于表示区块链网络的可信成员。
+                    - 这是成员服务提供者（MSP）发挥作用的地方 - 它确定了哪些根CA和中间CA被信任来定义信任域的成员，例如组织，通过列出他们的成员的身份，或通过识别哪些CA被授权为其成员发布有效身份，或者 - 通常是这种情况 - 通过两者的组合。
+                </section>
+                <section data-markdown>
+                    - MSP的强大功能不仅仅是列出谁是网络参与者或通道成员。MSP可以识别参与者可能在MSP所代表的组织范围内（例如，管理员或作为子组织组的成员）发挥作用的特定角色，并为在网络和通道环境下定义访问权限（例如通道管理员、读者、作者）奠定了基础。
+                </section>
+                <section data-markdown>
+                    - MSP的配置被通告（以**通道MSP 的形式）给相应组织成员参与的所有通道。除了通道MSP，对等节点，排序节点和客户端还维护本地MSP **以验证通道环境之外的成员消息，并定义对特定组件的权限（例如谁能够在节点上安装链代码）。
+                    - 此外，MSP可以允许识别已被撤销的身份列表 - 如身份文档 - 但我们将讨论该过程如何扩展到MSP。
+                </section>
+                <section data-markdown>
+                    # 将MSP映射到组织
+                </section>
+                <section data-markdown>
+                    - 组织是一组受管理的成员。这可以像跨国公司那样大，也可以像花店一样小。组织（或orgs）最重要的是他们在单一的MSP下管理他们的成员。请注意，这与X.509证书中定义的组织概念不同，我们将在稍后讨论。
+                </section>
+                <section data-markdown>
+                    - 组织与其MSP之间的独占关系使得在组织之后命名MSP是明智的，这是大多数策略配置中都会采用的约定。例如，组织ORG1可能会有一个名为ORG1-MSP的MSP。在某些情况下，组织可能需要多个成员组 - 例如，使用通道在组织之间执行非常不同的业务功能。在这些情况下，有多个MSP并相应地命名它们是有意义的，例如，ORG2-MSP-NATIONAL和ORG2-MSP-GOVERNMENT，反映了在NATIONAL销售通道与GOVERNMENT监管通道道相比，在ORG2内的不同成员信任根。
+                </section>
+                <section data-markdown>
+                    ![将MSP映射到组织](images/将MSP映射到组织.png)
+                </section>
+                <section data-markdown>
+                    - 组织的两种不同MSP配置。第一个配置显示MSP与组织之间的典型关系 - 单个MSP定义组织成员列表。在第二种配置中，不同的MSP用于表示具有国家、国际和政府关系的不同组织群组。
+                </section>
+                <section data-markdown>
+                    # 组织单元和MSP
+                </section>
+                <section data-markdown>
+                    - 组织通常被划分为多个组织单元（OU），每个组织单元都有一定的责任。 例如，ORG1组织可能同时具有ORG1-MANUFACTURING和ORG1-DISTRIBUTION OU，以反映这些独立的业务线。 当CA颁发X.509证书时，证书中的“OU”字段指定标识所属的业务线。
+                    - 稍后我们将看到OU如何有助于控制被视为区块链网络成员的组织的一部分。 例如，只有来自ORG1-MANUFACTURING OU的标识才能访问一个通道，而ORG1-DISTRIBUTION则不能。
+                    - 最后，尽管这是对OU的轻微滥用，但它们有时可以被联盟中的不同组织用来区分彼此。在这种情况下，不同的组织将相同的根CA和中间CA用于其信任链，但是指定“OU”字段以标识每个组织成员。 我们还将看到如何配置MSP以便以后实现此目的。
+                </section>
+                <section data-markdown>
+                    # 本地和通道MSP
+                </section>
+                <section data-markdown>
+                    - MSP出现在区块链网络中的两个位置：通道配置（**通道MSP **），以及在参与者本地的前提下（**本地MSP **）。 **为客户端（用户）和节点（对等节点和排序节点）定义本地MSP **。节点本地MSP定义该节点的权限（例如节点管理员是谁）。用户的本地MSP允许用户侧作为频道的成员（例如在链代码交易中）在其交易中认证自身，或者在系统中作为特定角色的所有者（例如配置交易的组织管理员）。
+                </section>
+                <section data-markdown>
+                    - **每个节点和用户必须定义​​本地MSP **，因为它定义了谁具有该级别的管理或参与权限（节点管理员不一定是通道管理员，反之亦然）。
+                    - 相反，通道MSP在通道级别定义了管理和参与权利。参与通道的每个组织都必须为其定义MSP。通道上的对等节点和排序节点都将共享相同的通道MSP视图，因此能够正确地验证通道参与者。这意味着，如果组织希望加入该通道，则需要将包含该组织成员信任链的MSP纳入通道配置中。否则，将拒绝源自该组织的交易。
+                </section>
+                <section data-markdown>
+                    - 本地和通道MSP之间的关键区别不在于它们如何运作 - 既将身份转变为角色 - 而是范围。
+                </section>
+                <section data-markdown>
+                    ![本地和通道MSP](images/本地和通道MSP.png)
+                </section>
+                <section data-markdown>
+                    - 本地和通道MSP。 每个对等节点的信任域（例如，组织）由对等节点的本地MSP定义，例如ORG1或ORG2。 通过将组织的MSP添加到通道配置来实现组织在通道上的表现。 例如，该图的通道由ORG1和ORG2管理。 类似的原则适用于网络、订购节点和用户，但为简单起见，此处未显示这些原则。
+                </section>
+                <section data-markdown>
+                    - 通过查看区块链管理员安装和实例化智能合约时会发生什么，你可能会发现如何使用本地和通道MSP很有帮助，如上图所示。
+                </section>
+                <section data-markdown>
+                    - 管理员B以RCA1发布并存储在其本地MSP中的身份连接到对等节点。当B试图在对等节点上安装智能合约时，对等节点检查其本地MSP，ORG1-MSP，以验证B的身份确实是ORG1的成员。成功验证将允许安装命令成功完成。随后，B希望在通道上实例化智能合约。因为这是一个通道操作，所以通道上的所有组织都必须同意。因此，对等节点必须先检查通道的MSP，然后才能成功提交此命令。 （其他事情也必须发生，但现在集中精力于上述。）
+                </section>
+                <section data-markdown>
+                    - 本地MSP仅在它们适用的节点或用户的文件系统上定义。因此，在物理上和逻辑上，每个节点或用户只有一个本地MSP。但是，由于通道MSP可用于通道中的所有节点，因此它们在通道配置中进行一次逻辑定义。但是，通道MSP也在通道中每个节点的文件系统上实例化，并通过共识保持同步。因此，虽然每个节点的本地文件系统上存在每个通道MSP的副本，但逻辑上通道MSP驻留在该通道上并由通道或网络维护。
+                </section>
+                <section data-markdown>
+                    # MSP级别
+                </section>
+                <section data-markdown>
+                    - 通道和本地MSP之间的分离反映了组织管理其本地资源（例如对等节点或排序节点），及其运行在通道或网络** 级别的资源（如帐本、智能合约和联盟）的需求。 将 MSP视为处于不同级别是有帮助的，更高级别的MSP处于与网络管理相关，而较低级别的 MSP处理私有资源管理的身份**。 MSP在每个管理级别都是必需的 - 必须为网络、通道、对等节点、排序节点和用户定义MSP。
+                </section>
+                <section data-markdown>
+                    ![MSP级别](images/MSP级别.png)
+                </section>
+                <section data-markdown>
+                    - MSP级别。对等节点和排序节点的MSP是本地的，而通道的MSP（包括网络配置通道）被该通道的所有参与者之间共享。在此图中，网络配置通道由ORG1管理，但另一个应用通道可由ORG1和ORG2管理。对等节点是ORG2的成员和管理者，而ORG1管理图中的排序节点。 ORG1信任来自RCA1的身份，而ORG2信任来自RCA2的身份。请注意，这些是管理身份，反映了谁可以管理这些组件。因此，当ORG1管理网络时，ORG2.MSP要确实存在于网络定义中。
+                </section>
+                <section data-markdown>
+                    - 网络MSP：网络配置定义谁是网络中的成员 - 通过定义参与组织的MSP - 以及这些成员中的哪些成员有权执行管理任务（例如，创建通道）。
+                    - 通道MSP：通道必须单独维护其成员的MSP。通道在特定的一组组织之间提供私有通信，这些组织又对其进行管理控制。在该通道的MSP环境中解释的通道策略，定义谁有能力参与通道上的某些动作，例如，添加组织或实例化链代码。请注意，管理通道的权限与管理网络配置通道（或任何其他通道）的权限之间没有必然的关系。管理权限存在于管理范围内（除非规则已经另行规定 - 请参阅下面对ROLE属性的讨论）。
+                </section>
+                <section data-markdown>
+                    - 对等节点MSP：此本地MSP在每个对等节点的文件系统上定义，每个对等节点都有一个MSP实例。从概念上讲，它执行与通道MSP完全相同的功能，其限制是它仅适用于定义它的对等节点。使用对等节点的本地MSP评估其授权的操作的示例是在对等节点上安装链代码。
+                    - 排序节点MSP：与对等节点MSP一样，排序节点本地MSP也在节点的文件系统上定义，仅适用于该节点。与对等节点一样，排序节点也由单个组织拥有，因此只有一个MSP来列出它信任的参与者或节点。
+                </section>
+                <section data-markdown>
+                    # MSP结构
+                </section>
+                <section data-markdown>
+                    ![MSP结构](images/MSP结构.png)
+                </section>
+                <section data-markdown>
+                    - 上图显示了本地MSP如何存储在本地文件系统中。 尽管通道MSP的物理结构并非如此，但它仍然是一种有用的思考方式。
+                    - 如你所见，MSP有九个元素。 最简单的方法是在目录结构中考虑这些元素，其中MSP名称是根文件夹名称，每个子文件夹代表MSP配置的不同元素。
+                </section>
+                <section data-markdown>
+                    - 根CA：此文件夹包含由此MSP代表的组织信任的根CA的自签名X.509证书列表。此MSP文件夹中必须至少有一个Root CA X.509证书。这是最重要的文件夹，因为它标识了必须从中派生所有其他证书才能被视为相应组织成员的CA。
+                </section>
+                <section data-markdown>
+                    - 中间CA：此文件夹包含此组织信任的中间CA的X.509证书列表。 每个证书必须由MSP中的一个根CA或中间CA签名，中间CA的颁发CA链最终会返回到受信任的根CA。
+                    - 中间CA可以代表组织的不同细分（如ORG1-MANUFACTURING和ORG1-DISTRIBUTION用于’ORG1`），或组织本身（如果商业CA被用于组织身份管理可能就是这种情况 ）。 在后一种情况下，中间CA可用于表示组织细分。这里 你可以找到有关MSP配置最佳实践的更多信息。 请注意，可能有一个正常运行的网络没有中间CA，在这种情况下此文件夹将为空。
+                    - 与根CA文件夹一样，此文件夹定义必须颁发证书才能被视为组织成员的CA.
+                </section>
+                <section data-markdown>
+                    - 组织单元（OU）：这些列在$FABRIC_CFG_PATH/msp/config.yaml文件中，并包含一个组织单元列表，其成员被视为该MSP所代表的组织的一部分。当你希望将组织成员限制为拥有其中包含特定OU的身份（由MSP指定的CA之一签名）的成员时，此功能尤其有用。
+                    - 指定OU是可选的。 如果未列出任何OU，则作为MSP一部分的所有身份（由根CA和中间CA文件夹标识）都将被视为组织的成员。
+                </section>
+                <section data-markdown>
+                    - 管理员：此文件夹包含一个身份列表，用于定义具有此组织管理员角色的参与者。对于标准的MSP类型，此列表中应该有一个或多个X.509证书。
+                    - 值得注意的是，仅仅因为一个参与者具有管理员的角色，并不意味着他们可以管理特定的资源！给定身份在管理系统方面的实际能力由管理系统资源的策略决定。例如，通道策略可能指定ORG1-MANUFACTURING管理员有权将新组织添加到通道，而ORG1-DISTRIBUTION管理员则没有此类权限。
+                </section>
+                <section data-markdown>
+                    - 即使X.509证书具有ROLE属性（例如，指定一个参与者是一个admin），这指的是一个参与者在其组织内而不是在区块链网络中的角色。这于OU属性的目的类似，如果OU已定义，这指的是参与者在组织中的位置。
+                    - 如果已编写该通道的策略以允许组织（或某些组织）的任何管理员执行某些通道功能（例如实例化链代码），则ROLE属性可用于在通道级别授予管理权限。通过这种方式，组织角色可以赋予网络角色。
+                </section>
+                <section data-markdown>
+                    - 撤销证书：如果某个角色的身份已被撤销，则识别该身份的信息 - 而不是身份本身 - 将保存在此文件夹中。 对于基于X.509的身份标识，这些标识符是称为主体密钥标识符（SKI）和授权访问标识符（AKI）的字符串对，拿来检查在使用X.509证书时确保证书未被撤销。
+                    - 此列表在概念上与CA的证书吊销列表（CRL）相同，但它也与从组织中撤消成员有关。因此，MSP（本地或通道）的管理员可以通过发布已撤销证书的CA，发布的更新CRL，来快速撤销组织中的参与者或节点。 这个“列表的列表”是可选的。它只会在证书被撤销时填充。
+                </section>
+                <section data-markdown>
+                    - 节点标识：此文件夹包含节点的标识，即加密材料 - 与KeyStore的内容相结合 - 将允许节点在给它所在的通道和网络中的其他参与者发送消息时对自身进行身份验证。对于基于X.509的标识，此文件夹包含** X.509证书**。这是对等节点在交易提案响应中放置的证书，例如，用于指出对等节点已经背书 - 随后可以在验证时针对结果交易的背书策略进行检查。
+                    - 此文件夹对于本地MSP是必需的，并且该节点必须只有一个X.509证书。它不用于通道MSP。
+                </section>
+                <section data-markdown>
+                    - 私钥的KeyStore：此文件夹是为对等节点或排序节点（或客户端的本地MSP）的本地MSP定义的，包含节点的签名密钥。该密钥以加密方式匹配节点标识文件夹中包含的节点标识，并用于签署数据 - 例如签署交易提案响应，作为背书阶段的一部分。
+                    - 此文件夹对于本地MSP是必需的，并且必须只包含一个私钥。显然，对此文件夹的访问权限必须仅限于对等节点具有管理职责的用户身份。
+                </section>
+                <section data-markdown>
+                    - 通道MSP的配置不包括此文件夹，因为通道MSP仅旨在提供身份验证功能而不是签名能力。
+                        - 安全传输层（TLS）根CA：此文件夹包含此组织信任的根CA的自签名X.509证书列表，用于TLS通信。TLS通信的一个示例是当对等节点需要连接到排序节点以便它可以接收帐本更新时。
+                        - MSP TLS信息涉及网络内的节点 - 对等节点和排序节点，换句话说，而不是消费网络的应用程序和管理员。
+                        - 此文件夹中必须至少有一个TLS根CA的X.509证书。
+                </section>
+                <section data-markdown>
+                    - TLS中间CA：此文件夹包含由此MSP 代表的组织信任的用于TLS通信的CA证书的中间CA列表。 当商业CA用于组织的TLS证书时，此文件夹特别有用。 与成员中间CA类似，指定中间TLS的CA是可选的。
+                </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>

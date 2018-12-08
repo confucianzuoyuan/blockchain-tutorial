@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+                <section data-markdown>
+                    ## bccsp
+                    - 密码学：加密、签名以及证书等等
+                </section>
+                <section data-markdown>
+                    ## bddtests
+                    - 行为驱动开发
+                    - 需求, 概要设计, 详细设计, 开发
+                </section>
+                <section data-markdown>
+                    ## common
+                    * 公共库
+                    * 错误处理
+                    * 日志处理
+                    * 账本存储
+                    * 各种工具
+                    * ...
+                </section>
+                <section data-markdown>
+                    ## core
+                    - 核心库，组件核心逻辑
+                </section>
+                <section data-markdown>
+                    ## devenv
+                    - 开发环境、Vagrant
+                </section>
+                <section data-markdown>
+                    ## docs
+                    - 文档相关
+                </section>
+                <section data-markdown>
+                    ## events
+                    - 事件监听机制
+                </section>
+                <section data-markdown>
+                    ## examples
+                    - 一些例子
+                </section>
+                <section data-markdown>
+                    ## gossip
+                    - 最终一致性共识算法，用于组织内部区块同步
+                </section>
+                <section data-markdown>
+                    ## images
+                    - docker镜像打包
+                </section>
+                <section data-markdown>
+                    ## msp
+                    - 成员服务管理 member service provider
+                </section>
+                <section data-markdown>
+                    ## orderer
+                    - 排序节点入口
+                </section>
+                <section data-markdown>
+                    ## peer
+                    - peer节点入口
+                </section>
+                <section data-markdown>
+                    ## proposals
+                    - 新功能提案
+                </section>
+                <section data-markdown>
+                    ## protos
+                    - grpc: protobuffer + rpc
+                    - jsonrpc: json + rpc
+                </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>

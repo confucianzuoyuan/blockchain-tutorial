@@ -1,0 +1,4 @@
+```
+cd raft
+go test
+```

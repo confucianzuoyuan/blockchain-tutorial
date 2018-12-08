@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Decentralized Ecommerce Store</title>
+ <link href='https://fonts.proxy.ustclug.org/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+ <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+ <script src="./app.js"></script>
+</head>
+<body>
+ <div class="container-fluid">
+  <h1>Ecommerce Store</h1>
+  <div>Total Products: <span id="total-products"></span></div>
+  <a href="list-item.html" class="btn btn-primary">List Item</a>
+  <div class="row">
+   <div class="col-sm-2">
+    <h2>Categories</h2>
+    <div id="categories">
+    </div>
+   </div>
+   <div class="col-sm-10">
+    <div class="row">
+     <h2 class="text-center">Products To Buy</h2>
+     <div class="row">
+      <div class="row" id="product-list">
+      </div>
+     </div>
+    </div>
+    <div class="row">
+     <h2 class="text-center">Products In Reveal Stage</h2>
+     <div class="row">
+      <div class="row" id="product-reveal-list">
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</body>
+</html>

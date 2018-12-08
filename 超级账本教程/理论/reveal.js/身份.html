@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+                <section data-markdown>
+                    # 什么是身份?
+                </section>
+                <section data-markdown>
+                    - 区块链网络中的不同参与者包括对等节点、排序节点、客户端应用程序、管理员等。 这些参与者中的每一个 — 网络内部或外部能够使用服务的活动元素 — 都具有封装在X.509数字证书中的数字身份。 这些身份确实很重要，因为它们确定了资源的确切权限，以及访问区块链网络中参与者信息的确切权限。
+                </section>
+                <section data-markdown>
+                    - 此外，数字身份还具有Fabric用于确定权限的一些附加属性，并且它为身份和关联属性的合集提供了一个特殊名称 — ** 委托人（principal） **。 委托人就像userIDs或groupIDs，但更灵活一点，因为它们可以包含参与者身份的各种属性，例如参与者的组织、部门、角色甚至是参与者的特殊身份。 当我们谈论委托人时，它们是决定其权限的属性。
+                </section>
+                <section data-markdown>
+                    - 对于可验证的身份，它必须来自受信任的机构。会员服务提供者（MSP）是Fabric用来实现这个的。更具体地说，MSP是定义管理该组织的有效身份规则的组件。Fabric中的默认MSP实现使用X.509证书作为身份，采用传统的公钥基础设施（PKI）分层模型。
+                </section>
+                <section data-markdown>
+                    # 一个简单的场景来解释身份的使用
+                </section>
+                <section data-markdown>
+                    - 想象一下，你去超市购买一些杂货。 在结账时，你会看到一个标志，表示只接受Visa、Mastercard和AMEX卡。 如果你尝试使用其他卡付款 - 我们称之为“ImagineCard” - 无论该卡是否真实且你的帐户中有足够的资金都无关紧要。 它不会被接受。
+                    - 拥有有效的信用卡是不够的 - 它也必须被商店接受！ PKI和MSP以相同的方式协同工作 - PKI提供身份列表，MSP说这些是参与网络的特定组织的成员。
+                </section>
+                <section data-markdown>
+                   - PKI证书颁发机构和MSP提供了类似的功能组合。PKI就像一个卡提供商 - 它分配了许多不同类型的可验证身份。另一方面，MSP类似于商店接受的卡提供商列表，确定哪些身份是商店支付网络的可信成员（参与者）。** MSP将可验证的身份转变为区块链网络的成员**。 
+                </section>
+                <section data-markdown>
+                    ![一个简单的场景来解释身份的使用](images/一个简单的场景来解释身份的使用.png)
+                </section>
+                <section data-markdown>
+                    # 什么是公钥基础设施?
+                </section>
+                <section data-markdown>
+                    ![什么是公钥基础设施](images/什么是公钥基础设施.png)
+                </section>
+                <section data-markdown>
+                    - 公钥基础设施（PKI）的要素。 PKI由向各方（例如服务的用户、服务提供者）发布数字证书的证书颁发机构组成，各方使用CA在他们环境交换的消息中对自己进行认证。 CA的证书撤销列表（CRL）构成不再有效的证书的参考。 证书的撤销可能由于多种原因而发生。 例如，证书可能会因为与证书关联的加密私有材料已被暴露而被撤销。
+                </section>
+                <section data-markdown>
+                    - 虽然区块链网络不仅仅是一个通信网络，但它依赖于PKI标准来确保各个网络参与者之间的安全通信，并确保在区块链上发布的消息得到正确的认证。 因此，了解PKI的基础知识是非常重要的，以及知道为什么MSP如此重要。
+                </section>
+                <section data-markdown>
+                    - PKI有四个关键要素：
+                        - 数字证书
+                        - 公钥和私钥
+                        - 证书颁发机构
+                        - 证书撤销清单
+                </section>
+                <section data-markdown>
+                    # 数字证书
+                </section>
+                <section data-markdown>
+                    - 数字证书是包含与证书持有者有关的一组属性的文档。 最常见的证书类型是符合X.509标准的证书，它允许在其结构中编码当事人的识别细节。
+                    - 例如，位于密歇根州底特律的Mitchell汽车制造部门的Mary Morris可能拥有SUBJECT属性为C=US、ST=Michigan、L=Detroit、O=Mitchell Cars、OU=Manufacturing、CN=Mary Morris/UID=123456 的数字证书。她的证书类似于她的政府身份证 - 它提供了Mary的信息，她可以用来证明关于她的重要事实。 X.509证书中还有许多其他属性，但现在让我们专注于这些。
+                </section>
+                <section data-markdown>
+                    ![数字证书](images/数字证书.png)
+                </section>
+                <section data-markdown>
+                    - 描述一个名为Mary Morris的当事人数字证书。Mary是证书的SUBJECT，突出显示的SUBJECT文本显示了关于Mary的重要事实。如你所见，证书还包含更多信息。最重要的是，Mary的公钥是随着她的证书中分发的，而她的私钥则不是。私钥必须保密。
+                </section>
+                <section data-markdown>
+                    - 重要的是，玛丽的所有属性都可以使用称为密码学（字面意思，“秘密写作”）的数学技术进行记录，这样篡改将使证书无效。 只要对方信任证书颁发者（称为证书颁发机构（CA）），密码学就允许Mary将证书呈现给其他人以证明其身份。 只要CA安全地保存某些加密信息（意思是，它自己的私钥），任何阅读证书的人都可以确定关于Mary的信息没有被篡改 - 它将始终具有Mary Morris的那些特定属性。将Mary的X.509证书视为无法改变的数字身份证。
+                </section>
+                <section data-markdown>
+                    # 身份验证、公钥和私钥
+                </section>
+                <section data-markdown>
+                    - 身份验证和消息完整性是安全通信中的重要概念。 身份验证要求交换消息的各方确保创建特定消息的身份。 对于具有“完整性”的消息意味着在其传输期间不能被修改。 例如，你可能希望确保与真正的Mary Morris而不是模仿者进行沟通。 或者，如果Mary向你发送了一条消息，你可能希望确保其在传输过程中没有被其他任何人篡改过。
+                </section>
+                <section data-markdown>
+                    - 传统的身份验证机制依赖于数字签名，顾名思义，它允许一方以数字方式签署其消息。 数字签名还可以保证签名消息的完整性。
+                    - 从技术上讲，数字签名机制要求每一方保留两个关联的密钥：广泛可用的公钥充当认证的靠山，以及用于在消息上生成数字签名的私钥。 数字签名消息的接收者可以在预期发送者的公钥下通过检查附加签名是否有效来验证被接收消息的来源和完整性。
+                </section>
+                <section data-markdown>
+                    - 私钥和相应公钥之间的唯一关系是使安全通信成为可能的加密魔法。密钥之间的唯一数学关系使得私钥可用于在消息上产生签名。 只有相应的公钥才能匹配，并且只能在同一条消息上匹配。
+                </section>
+                <section data-markdown>
+                    ![身份验证、公钥和私钥](images/身份验证、公钥和私钥.png)
+                </section>
+                <section data-markdown>
+                    - 在上面的示例中，Mary使用她的私钥对邮件进行签名。 任何使用她的公钥查看签名消息的人都可以验证签名。
+                </section>
+                <section data-markdown>
+                    # 证书颁发机构
+                </section>
+                <section data-markdown>
+                    - 如你所见，参与者或节点能够通过由系统信任的机构为其发布的数字身份参与区块链网络。 在最常见的情况下，数字身份（或简称身份）具有符合X.509标准并由证书颁发机构（CA）颁发的经加密验证的数字证书的形式。
+                    - CA是互联网安全协议的常见部分，你可能已经听说过一些比较流行的协议：Symantec（最初是Verisign）、GeoTrust、DigiCert、GoDaddy和Comodo等。
+                </section>
+                <section data-markdown>
+                    ![证书颁发机构](./images/证书颁发机构.png)
+                </section>
+                <section data-markdown>
+                    - 证书颁发机构向不同的参与者分发证书。 这些证书由CA进行数字签名，并将参与者与其公钥绑定在一起（并且具有可选地全面属性列表）。 因此，如果一个人信任CA（并且知道其公钥），则可以信任特定参与者绑定到证书中包含的公钥，并通过验证参与者证书上的CA签名来拥有所包含的属性。。
+                    - 证书可以广泛传播，因为它们既不包括参与者也不包括CA的私钥。 因此，它们可以用作信任的靠山，用于验证来自不同参与者的消息。
+                </section>
+                <section data-markdown>
+                    - CA也有一个证书，它们可以广泛获得。 这允许CA发布身份的消费者，通过检查他们的证书（只能由相应私钥的持有者（即CA）生成）来验证CA自身的证书。
+                    - 在区块链设置中，希望在网络交互的每个参与者都需要一个身份。在此设置中，你可能会说一个或多个CA 可用于从数字角度定义组织成员。CA是为组织的参与者提供可验证的数字身份的基础。
+                </section>
+                <section data-markdown>
+                    # 根CA、中间CA和信任链
+                </section>
+                <section data-markdown>
+                    - CA有两种形式：根CA 和中间CA 。 由于根CA（赛门铁克、Geotrust等）必须向互联网用户安全地分发数亿个证书，因此将此过程分散到所谓的中间CA中是有道理的。 这些中间CA具有由根CA或其他中间机构颁发的证书，允许为链中的任何CA颁发的任何证书建立“信任链”。 追溯到根CA的这种能力不仅允许CA的功能在仍然提供安全性的同时进行扩展 - 允许使用证书的组织充满信心地使用中间CA–它限制了根CA的暴露，如果根CA受到损害，将会危及整个信任链。 另一方面，如果中级CA受到损害，则曝光量会小得多。
+                </section>
+                <section data-markdown>
+                    ![根CA、中间CA和信任链](images/根CA、中间CA和信任链.png)
+                </section>
+                <section data-markdown>
+                    - 只要每个中间CA的证书颁发机构是根CA本身或具有对根CA的信任链，就可以在根CA和一组中间CA之间建立信任链。
+                    - 中间CA在跨多个组织颁发证书时提供了巨大的灵活性，这在要许可的区块链系统（如Fabric）中非常有用。例如，你将看到不同的组织可能使用不同的根CA，或者使用具有不同中间CA的相同根CA - 它确实取决于网络的需求。
+                </section>
+                <section data-markdown>
+                    # Fabric CA
+                </section>
+                <section data-markdown>
+                    - 因为CA非常重要，Fabric提供了一个内置的CA组件，允许你在你构建的区块链网络中创建CA。此组件（称为** Fabric CA ）是一个私有根CA提供者，能够管理具有X.509证书形式的Fabric参与者的数字身份。 由于Fabric CA是针对Fabric的根CA需求的自定义CA，因此它本身无法为浏览器中的常规/自动使用提供SSL证书。 但是，因为必须使用某些** CA来管理身份（即使在测试环境中），Fabric CA也可用于提供和管理证书。 使用公共/商业根或中间CA来提供识别也是可能的 - 并且完全合适。
+                </section>
+                <section data-markdown>
+                    # 证书撤销列表
+                </section>
+                <section data-markdown>
+                    - 证书撤销列表（CRL）很容易理解 - 它只是CA知道由于某种原因而被撤销的证书的引用列表。 如果你回想一下商店场景，CRL就像被盗信用卡列表一样。
+                    - 当第三方想要验证另一方的身份时，它首先检查颁发CA的CRL以确保证书尚未被撤销。 验证者不是必须检查CRL，但如果不检查，则他们将冒着接受受损身份的风险。
+                </section>
+                <section data-markdown>
+                    ![证书撤销列表](images/证书撤销列表.png)
+                </section>
+                <section data-markdown>
+                    - 使用CRL检查证书是否仍然有效。如果模仿者试图将受损的数字证书传递给验证方，则验证方可以先针对颁发CA的CRL进行检查，以确保其未列为不再有效。
+                    - 请注意，证书被撤销与证书过期非常不同。撤销的证书尚未过期 - 按其他措施，它们是完全有效的证书。
+                </section>
+                <section data-markdown>
+                    - 现在你已经了解了PKI如何通过信任链提供可验证的身份，下一步是了解如何使用这些身份来代表区块链网络的可信成员。这就是会员服务提供者（MSP）发挥作用的地方 - 它识别了区块链网络中特定组织的各个成员。
+                </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
