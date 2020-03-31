@@ -19,7 +19,7 @@
   "dependencies": {
     "@material-ui/core": "^1.5.1",
     "config": "^1.30.0",
-    "next": "^7.0.2",
+    "next": "^9.3.3",
     "next-routes": "^1.4.2",
     "react": "16.6.3",
     "react-dom": "16.6.3",
